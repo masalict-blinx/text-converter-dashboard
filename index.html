@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text to Obsidian Converter - Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 24px 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle { color: #666; font-size: 13px; margin-top: 4px; }
+
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .filter-group {
+      display: flex;
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .refresh-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .refresh-btn:hover { opacity: 0.9; }
+
+    /* Source Cards */
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .source-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border-left: 5px solid transparent;
+      transition: transform 0.2s;
+    }
+
+    .source-card:hover { transform: translateY(-3px); }
+    .source-card.plaud { border-left-color: #1976d2; }
+    .source-card.lark  { border-left-color: #7b1fa2; }
+    .source-card.total { border-left-color: #667eea; }
+
+    .source-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .source-icon { font-size: 28px; }
+
+    .source-title { font-size: 15px; font-weight: 700; color: #333; }
+    .source-desc  { font-size: 12px; color: #999; margin-top: 2px; }
+
+    .source-count {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .source-card.plaud .source-count { color: #1976d2; }
+    .source-card.lark  .source-count { color: #7b1fa2; }
+    .source-card.total .source-count {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .source-sub { font-size: 13px; color: #999; }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-label { font-size: 12px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 28px; font-weight: bold; color: #333; }
+    .stat-subvalue { font-size: 12px; color: #999; margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .chart-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; }
+
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      background: #f8f9fa;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #666;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+    tr:hover { background: #f8f9fa; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-plaud   { background: #e3f2fd; color: #1976d2; }
+    .badge-lark    { background: #f3e5f5; color: #7b1fa2; }
+    .badge-claude  { background: #fff3e0; color: #f57c00; }
+    .badge-success { background: #e8f5e9; color: #388e3c; }
+    .badge-error   { background: #ffebee; color: #c62828; }
+
+    .period-label {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 12px;
+      border-radius: 20px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .loading { text-align: center; padding: 50px; color: white; font-size: 18px; }
+
+    @media (max-width: 768px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .source-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h1>📊 Text to Obsidian Converter</h1>
+        <p class="subtitle">リアルタイム統計ダッシュボード <span class="period-label" id="periodLabel">全期間</span></p>
+      </div>
+      <div class="header-right">
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="setFilter('all')">全体</button>
+          <button class="filter-btn" onclick="setFilter('lastMonth')">先月</button>
+          <button class="filter-btn" onclick="setFilter('thisMonth')">今月</button>
+        </div>
+        <button class="refresh-btn" onclick="loadStats()">🔄 更新</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">データを読み込んでいます...</div>
+
+    <div id="dashboard" style="display: none;">
+
+      <!-- Source Cards -->
+      <div class="source-grid">
+        <div class="source-card plaud">
+          <div class="source-header">
+            <div class="source-icon">🎙️</div>
+            <div>
+              <div class="source-title">PlaudAI 音声録音</div>
+              <div class="source-desc">音声 → 文字起こし → 議事録</div>
+            </div>
+          </div>
+          <div class="source-count" id="plaudCount">-</div>
+          <div class="source-sub" id="plaudSub">-</div>
+        </div>
+
+        <div class="source-card lark">
+          <div class="source-header">
+            <div class="source-icon">📹</div>
+            <div>
+              <div class="source-title">Lark 録画</div>
+              <div class="source-desc">テキスト → 議事録</div>
+            </div>
+          </div>
+          <div class="source-count" id="larkCount">-</div>
+          <div class="source-sub" id="larkSub">-</div>
+        </div>
+
+        <div class="source-card total">
+          <div class="source-header">
+            <div class="source-icon">📊</div>
+            <div>
+              <div class="source-title">合計</div>
+              <div class="source-desc">全ソース合算</div>
+            </div>
+          </div>
+          <div class="source-count" id="totalProcessed">-</div>
+          <div class="source-sub" id="totalSub">-</div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">総トークン数</div>
+          <div class="stat-value" id="totalTokens">-</div>
+          <div class="stat-subvalue" id="tokenBreakdown">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">推定コスト</div>
+          <div class="stat-value" id="totalCost">-</div>
+          <div class="stat-subvalue" id="costPerFile">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均処理時間</div>
+          <div class="stat-value" id="avgDuration">-</div>
+          <div class="stat-subvalue" id="successRate">-</div>
+        </div>
+      </div>
+
+      <!-- 全体のみ: 月別グラフ -->
+      <div id="monthlyCharts" style="display:none;">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">📅 月別処理数推移</div>
+            <canvas id="monthlyCountChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">🪙 月別トークン使用量</div>
+            <canvas id="monthlyTokensChart"></canvas>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">💴 月別コスト推移</div>
+            <canvas id="monthlyCostChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">📈 日別処理数推移</div>
+          <canvas id="dailyChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">🗂️ ソース別内訳</div>
+          <canvas id="sourceChart"></canvas>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">📊 日別トークン使用量</div>
+          <canvas id="tokensChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">💰 日別コスト推移</div>
+          <canvas id="costChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Files Table -->
+      <div class="table-card">
+        <div class="chart-title">📄 処理履歴（最新30件）</div>
+        <table>
+          <thead>
+            <tr>
+              <th>日時</th>
+              <th>ファイル名</th>
+              <th>ソース</th>
+              <th>AIプロバイダー</th>
+              <th>トークン数</th>
+              <th>コスト</th>
+              <th>処理時間</th>
+              <th>状態</th>
+            </tr>
+          </thead>
+          <tbody id="recentFiles"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PRICING = {
+      claude: {
+        'claude-opus-4-5-20251101': { input: 15.0, output: 75.0 },
+        'claude-sonnet-4-5-20250929': { input: 3.0, output: 15.0 },
+        'claude-haiku-3-5-20241022': { input: 0.8, output: 4.0 }
+      },
+      openai: {
+        'gpt-4o': { input: 2.5, output: 10.0 },
+        'gpt-4-turbo': { input: 10.0, output: 30.0 },
+        'gpt-3.5-turbo': { input: 0.5, output: 1.5 }
+      }
+    };
+
+    let allRecords = [];
+    let currentFilter = 'all';
+    let charts = {};
+
+    function getSourceType(record) {
+      return record.fileType === 'audio' ? 'plaud' : 'lark';
+    }
+
+    function isClaudeCode(record) {
+      return record.aiProvider === 'claude-code';
+    }
+
+    function calculateCost(record) {
+      if (record.status !== 'success') return 0;
+      if (isClaudeCode(record)) return 0;
+      let cost = 0;
+      if (record.aiProvider && record.model && record.inputTokens && record.outputTokens) {
+        const pricing = PRICING[record.aiProvider]?.[record.model];
+        if (pricing) {
+          cost += (record.inputTokens / 1000000) * pricing.input;
+          cost += (record.outputTokens / 1000000) * pricing.output;
+        }
+      }
+      return cost;
+    }
+
+    function formatNumber(num) { return Math.round(num).toLocaleString('ja-JP'); }
+    function formatCost(cost)   { return '$' + cost.toFixed(4); }
+    function formatTokens(record) {
+      if (isClaudeCode(record)) return '-';
+      return formatNumber((record.inputTokens || 0) + (record.outputTokens || 0));
+    }
+    function formatRecordCost(record) {
+      if (isClaudeCode(record)) return '<span title="Claude Codeサブスク内">∞</span>';
+      return formatCost(calculateCost(record));
+    }
+
+    function getFilterRange(filter) {
+      const now = new Date();
+      if (filter === 'thisMonth') {
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        return { start, end, label: `今月 (${now.getFullYear()}/${now.getMonth() + 1})` };
+      }
+      if (filter === 'lastMonth') {
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const end   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+        return { start, end, label: `先月 (${now.getFullYear()}/${now.getMonth()})` };
+      }
+      return { start: null, end: null, label: '全期間' };
+    }
+
+    function applyFilter(records, filter) {
+      const range = getFilterRange(filter);
+      if (!range.start) return records;
+      return records.filter(r => {
+        const t = new Date(r.timestamp);
+        return t >= range.start && t <= range.end;
+      });
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderDashboard();
+    }
+
+    function destroyCharts() {
+      Object.values(charts).forEach(c => c.destroy());
+      charts = {};
+    }
+
+    function renderDashboard() {
+      const filtered = applyFilter(allRecords, currentFilter);
+      const range    = getFilterRange(currentFilter);
+
+      document.getElementById('periodLabel').textContent = range.label;
+
+      const successRecords = filtered.filter(r => r.status === 'success');
+      const errorCount     = filtered.filter(r => r.status === 'error').length;
+
+      const plaudRecords = successRecords.filter(r => getSourceType(r) === 'plaud');
+      const larkRecords  = successRecords.filter(r => getSourceType(r) === 'lark');
+
+      // Source cards
+      document.getElementById('plaudCount').textContent = plaudRecords.length;
+      document.getElementById('plaudSub').textContent   = `音声ファイル処理`;
+      document.getElementById('larkCount').textContent  = larkRecords.length;
+      document.getElementById('larkSub').textContent    = `テキストファイル処理`;
+      document.getElementById('totalProcessed').textContent = successRecords.length;
+      document.getElementById('totalSub').textContent   =
+        `エラー: ${errorCount}件 | 成功率: ${filtered.length ? ((successRecords.length / filtered.length) * 100).toFixed(1) : 0}%`;
+
+      // Stats
+      const apiRecords = successRecords.filter(r => !isClaudeCode(r));
+      const totalInputTokens  = apiRecords.reduce((s, r) => s + (r.inputTokens || 0), 0);
+      const totalOutputTokens = apiRecords.reduce((s, r) => s + (r.outputTokens || 0), 0);
+      const totalTokens = totalInputTokens + totalOutputTokens;
+      const totalCost   = apiRecords.reduce((s, r) => s + calculateCost(r), 0);
+      const totalDur    = successRecords.reduce((s, r) => s + (r.totalDuration || 0), 0);
+      const avgDuration = successRecords.length ? totalDur / successRecords.length : 0;
+
+      document.getElementById('totalTokens').textContent   = formatNumber(totalTokens);
+      document.getElementById('tokenBreakdown').textContent = `入力: ${formatNumber(totalInputTokens)} | 出力: ${formatNumber(totalOutputTokens)}`;
+      document.getElementById('totalCost').textContent      = formatCost(totalCost);
+      document.getElementById('costPerFile').textContent    = `平均: ${formatCost(successRecords.length ? totalCost / successRecords.length : 0)}/ファイル`;
+      document.getElementById('avgDuration').textContent    = (avgDuration / 1000).toFixed(1) + 's';
+      document.getElementById('successRate').textContent    = `成功: ${successRecords.length}件 | エラー: ${errorCount}件`;
+
+      // 全体フィルター時のみ月別グラフを表示
+      const monthlySection = document.getElementById('monthlyCharts');
+      monthlySection.style.display = currentFilter === 'all' ? 'block' : 'none';
+
+      destroyCharts();
+      renderCharts(successRecords, filtered);
+      if (currentFilter === 'all') renderMonthlyCharts(successRecords);
+      renderRecentFiles(filtered);
+
+      document.getElementById('loading').style.display  = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    }
+
+    function renderCharts(successRecords, allFiltered) {
+      // Daily chart (Plaud vs Lark)
+      const dailyMap = {};
+      successRecords.forEach(r => {
+        const date = new Date(r.timestamp).toISOString().split('T')[0];
+        if (!dailyMap[date]) dailyMap[date] = { plaud: 0, lark: 0, cost: 0, tokens: 0 };
+        const src = getSourceType(r);
+        dailyMap[date][src]++;
+        dailyMap[date].cost   += calculateCost(r);
+        dailyMap[date].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
+      });
+
+      const dailyData = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
+      const labels = dailyData.map(d => d[0].substring(5));
+
+      charts.daily = new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'PlaudAI音声',
+              data: dailyData.map(d => d[1].plaud),
+              backgroundColor: 'rgba(25, 118, 210, 0.7)',
+              stack: 'source'
+            },
+            {
+              label: 'Lark議事録',
+              data: dailyData.map(d => d[1].lark),
+              backgroundColor: 'rgba(123, 31, 162, 0.7)',
+              stack: 'source'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '処理数' } } }
+        }
+      });
+
+      // Source donut
+      charts.source = new Chart(document.getElementById('sourceChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['PlaudAI 音声録音', 'Lark 録画'],
+          datasets: [{
+            data: [
+              successRecords.filter(r => getSourceType(r) === 'plaud').length,
+              successRecords.filter(r => getSourceType(r) === 'lark').length
+            ],
+            backgroundColor: ['rgba(25, 118, 210, 0.7)', 'rgba(123, 31, 162, 0.7)']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // Tokens chart
+      charts.tokens = new Chart(document.getElementById('tokensChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'トークン数',
+            data: dailyData.map(d => d[1].tokens),
+            borderColor: 'rgba(102, 126, 234, 1)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true }
+      });
+
+      // Cost chart
+      charts.cost = new Chart(document.getElementById('costChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'コスト ($)',
+            data: dailyData.map(d => d[1].cost),
+            borderColor: 'rgba(118, 75, 162, 1)',
+            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+
+    function renderMonthlyCharts(successRecords) {
+      // 月別集計
+      const monthlyMap = {};
+      successRecords.forEach(r => {
+        const month = new Date(r.timestamp).toISOString().substring(0, 7); // YYYY-MM
+        if (!monthlyMap[month]) monthlyMap[month] = { plaud: 0, lark: 0, tokens: 0, cost: 0 };
+        monthlyMap[month][getSourceType(r)]++;
+        monthlyMap[month].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
+        monthlyMap[month].cost   += calculateCost(r);
+      });
+
+      const monthlyData = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0]));
+      const labels = monthlyData.map(d => d[0]); // YYYY-MM
+
+      // 月別処理数推移（積み上げバー）
+      charts.monthlyCount = new Chart(document.getElementById('monthlyCountChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'PlaudAI音声',
+              data: monthlyData.map(d => d[1].plaud),
+              backgroundColor: 'rgba(25, 118, 210, 0.7)',
+              stack: 'source'
+            },
+            {
+              label: 'Lark議事録',
+              data: monthlyData.map(d => d[1].lark),
+              backgroundColor: 'rgba(123, 31, 162, 0.7)',
+              stack: 'source'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, title: { display: true, text: '処理数' }, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+
+      // 月別トークン使用量（バー）
+      charts.monthlyTokens = new Chart(document.getElementById('monthlyTokensChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'トークン数',
+            data: monthlyData.map(d => d[1].tokens),
+            backgroundColor: 'rgba(102, 126, 234, 0.7)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { title: { display: true, text: 'トークン数' } } }
+        }
+      });
+
+      // 月別コスト推移（ライン）
+      charts.monthlyCost = new Chart(document.getElementById('monthlyCostChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'コスト ($)',
+            data: monthlyData.map(d => d[1].cost || 0),
+            borderColor: 'rgba(118, 75, 162, 1)',
+            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            y: {
+              title: { display: true, text: 'コスト ($)' },
+              ticks: { callback: v => '$' + v.toFixed(4) }
+            }
+          }
+        }
+      });
+    }
+
+    function renderRecentFiles(records) {
+      const recent = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
+      const tbody  = document.getElementById('recentFiles');
+      tbody.innerHTML = '';
+
+      recent.forEach(record => {
+        const row  = tbody.insertRow();
+        const src  = getSourceType(record);
+        const cost = calculateCost(record);
+
+        const displayName = record.outputFileName || record.fileName;
+        row.innerHTML = `
+          <td>${new Date(record.timestamp).toLocaleString('ja-JP')}</td>
+          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${displayName}">${displayName}</td>
+          <td><span class="badge badge-${src}">${src === 'plaud' ? '🎙️ PlaudAI' : '📹 Lark'}</span></td>
+          <td><span class="badge badge-claude">${(record.aiProvider || '-').toUpperCase()}</span></td>
+          <td>${formatTokens(record)}</td>
+          <td>${formatRecordCost(record)}</td>
+          <td>${((record.totalDuration || 0) / 1000).toFixed(1)}s</td>
+          <td><span class="badge badge-${record.status}">${record.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>
+        `;
+      });
+    }
+
+    const SUPABASE_URL      = 'https://uauallnksbsuqwetydvv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhdWFsbG5rc2JzdXF3ZXR5ZHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMjg1OTEsImV4cCI6MjA3NjkwNDU5MX0.HCWvoth7Baa0n2HtUh1yDBRBxLn_jQGsE7RqpsMHqZ8';
+    const supabaseClient    = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadStats() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('conversion_logs')
+          .select('*')
+          .order('timestamp', { ascending: false });
+
+        if (error || !data || data.length === 0) {
+          document.getElementById('loading').textContent = 'データがありません。';
+          return;
+        }
+
+        allRecords = data.map(r => ({
+          id:                    r.id,
+          timestamp:             r.timestamp,
+          fileName:              r.file_name,
+          outputFileName:        r.output_file_name,
+          fileType:              r.file_type,
+          status:                r.status,
+          totalDuration:         r.total_duration,
+          aiProvider:            r.ai_provider,
+          model:                 r.model,
+          inputTokens:           r.input_tokens,
+          outputTokens:          r.output_tokens,
+          conversionDuration:    r.conversion_duration,
+          transcriptionDuration: r.transcription_duration,
+          audioFileSize:         r.audio_file_size,
+          transcriptionLength:   r.transcription_length,
+          errorMessage:          r.error_message,
+          createdAt:             r.created_at,
+        }));
+
+        renderDashboard();
+      } catch (error) {
+        document.getElementById('loading').textContent = 'エラー: ' + error.message;
+      }
+    }
+
+    loadStats();
+    setInterval(loadStats, 30000);
+  </script>
+</body>
+</html>
