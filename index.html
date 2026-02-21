@@ -672,20 +672,17 @@
         }
       });
 
-      // 月別コスト推移（ライン）
+      // 月別コスト推移（バー）
       charts.monthlyCost = new Chart(document.getElementById('monthlyCostChart'), {
-        type: 'line',
+        type: 'bar',
         data: {
           labels,
           datasets: [{
             label: 'コスト ($)',
             data: monthlyData.map(d => d[1].cost || 0),
+            backgroundColor: 'rgba(118, 75, 162, 0.7)',
             borderColor: 'rgba(118, 75, 162, 1)',
-            backgroundColor: 'rgba(118, 75, 162, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-            pointHoverRadius: 7
+            borderWidth: 1
           }]
         },
         options: {
