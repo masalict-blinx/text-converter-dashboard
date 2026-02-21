@@ -211,6 +211,18 @@
     .badge-success { background: #e8f5e9; color: #388e3c; }
     .badge-error   { background: #ffebee; color: #c62828; }
 
+    .section-divider {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin: 24px 0 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      border-left: 5px solid #f59e0b;
+    }
+
     .period-label {
       display: inline-block;
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -353,7 +365,47 @@
         </div>
       </div>
 
+      <!-- Slide Section Divider -->
+      <div class="section-divider">🍌 スライド生成</div>
+
+      <!-- Slide Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">スライド生成数</div>
+          <div class="stat-value" id="slideTotal">-</div>
+          <div class="stat-subvalue" id="slideSub">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均スライド枚数</div>
+          <div class="stat-value" id="slideAvgCount">-</div>
+          <div class="stat-subvalue">枚/回</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均処理時間</div>
+          <div class="stat-value" id="slideAvgDuration">-</div>
+          <div class="stat-subvalue">秒/回</div>
+        </div>
+      </div>
+
+      <!-- Slide History Table -->
+      <div class="table-card" style="margin-bottom:20px;">
+        <div class="chart-title">🍌 スライド生成履歴（最新20件）</div>
+        <table>
+          <thead>
+            <tr>
+              <th>日時</th>
+              <th>タイトル</th>
+              <th>スライド数</th>
+              <th>処理時間</th>
+              <th>状態</th>
+            </tr>
+          </thead>
+          <tbody id="slideHistory"></tbody>
+        </table>
+      </div>
+
       <!-- Recent Files Table -->
+      <div class="section-divider">🎙️ 音声・テキスト変換</div>
       <div class="table-card">
         <div class="chart-title">📄 処理履歴（最新30件）</div>
         <table>
@@ -764,8 +816,52 @@
       }
     }
 
+    async function loadSlideStats() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('slide_logs')
+          .select('*')
+          .order('timestamp', { ascending: false });
+
+        if (error || !data) return;
+
+        const success = data.filter(r => r.status === 'success');
+        const errCount = data.filter(r => r.status === 'error').length;
+
+        document.getElementById('slideTotal').textContent = success.length;
+        document.getElementById('slideSub').textContent = `エラー: ${errCount}件`;
+
+        const avgCount = success.length
+          ? (success.reduce((s, r) => s + (r.slide_count || 0), 0) / success.length).toFixed(1)
+          : '-';
+        document.getElementById('slideAvgCount').textContent = avgCount;
+
+        const avgDur = success.length
+          ? (success.reduce((s, r) => s + (r.duration_sec || 0), 0) / success.length).toFixed(0)
+          : '-';
+        document.getElementById('slideAvgDuration').textContent = avgDur;
+
+        const tbody = document.getElementById('slideHistory');
+        tbody.innerHTML = '';
+        data.slice(0, 20).forEach(r => {
+          const row = tbody.insertRow();
+          row.innerHTML = `
+            <td>${new Date(r.timestamp).toLocaleString('ja-JP')}</td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title || '-'}">${r.title || '-'}</td>
+            <td>${r.slide_count != null ? r.slide_count + '枚' : '-'}</td>
+            <td>${r.duration_sec != null ? Math.round(r.duration_sec) + 's' : '-'}</td>
+            <td><span class="badge badge-${r.status}">${r.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>
+          `;
+        });
+      } catch (e) {
+        console.error('slide stats error:', e);
+      }
+    }
+
     loadStats();
+    loadSlideStats();
     setInterval(loadStats, 30000);
+    setInterval(loadSlideStats, 30000);
   </script>
 </body>
 </html>
