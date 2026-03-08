@@ -375,6 +375,7 @@
     <!-- タブ -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('converter', this)">🎙️ Text Converter</button>
+      <button class="tab-btn" onclick="switchTab('slides', this)">🍌 スライド生成</button>
       <button class="tab-btn" onclick="switchTab('sales', this)">📨 Sales AI</button>
     </div>
 
@@ -495,12 +496,30 @@
           </div>
         </div>
 
-        <!-- Slide Section -->
-        <div class="section-divider">🍌 スライド生成</div>
+        <!-- Conversion History -->
+        <div class="section-divider">🎙️ 音声・テキスト変換</div>
+        <div class="table-card">
+          <div class="chart-title">📄 処理履歴（最新30件）</div>
+          <table>
+            <thead>
+              <tr><th>日時</th><th>ファイル名</th><th>ソース</th><th>AIプロバイダー</th><th>トークン数</th><th>コスト</th><th>処理時間</th><th>状態</th></tr>
+            </thead>
+            <tbody id="recentFiles"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /tab-converter -->
+
+    <!-- ========== TAB: スライド生成 ========== -->
+    <div id="tab-slides" class="tab-panel">
+
+      <div id="slides-loading" class="loading">データを読み込んでいます...</div>
+
+      <div id="slides-dashboard" style="display:none;">
 
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-label">スライド生成数</div>
+            <div class="stat-label">スライド生成数（成功）</div>
             <div class="stat-value" id="slideTotal">-</div>
             <div class="stat-subvalue" id="slideSub">-</div>
           </div>
@@ -516,7 +535,19 @@
           </div>
         </div>
 
-        <div class="table-card" style="margin-bottom:20px;">
+        <!-- 月別グラフ -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">📅 月別スライド生成数</div>
+            <canvas id="slideMonthlyChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">⏱️ 月別平均処理時間</div>
+            <canvas id="slideDurChart"></canvas>
+          </div>
+        </div>
+
+        <div class="table-card">
           <div class="chart-title">🍌 スライド生成履歴（最新20件）</div>
           <table>
             <thead>
@@ -526,19 +557,8 @@
           </table>
         </div>
 
-        <!-- Conversion History -->
-        <div class="section-divider">🎙️ 音声・テキスト変換</div>
-        <div class="table-card">
-          <div class="chart-title">📄 処理履歴（最新30件）</div>
-          <table>
-            <thead>
-              <tr><th>日時</th><th>ファイル名</th><th>ソース</th><th>AIプロバイダー</th><th>トークン数</th><th>コスト</th><th>処理時間</th><th>状態</th></tr>
-            </thead>
-            <tbody id="recentFiles"></tbody>
-          </table>
-        </div>
       </div>
-    </div><!-- /tab-converter -->
+    </div><!-- /tab-slides -->
 
     <!-- ========== TAB: Sales AI ========== -->
     <div id="tab-sales" class="tab-panel">
@@ -632,8 +652,12 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
       btn.classList.add('active');
-      if (name === 'sales' && !salesLoaded) salesLoad();
+      if (name === 'sales'  && !salesLoaded)  salesLoad();
+      if (name === 'slides' && !slidesLoaded) loadSlideStats();
     }
+
+    let slidesLoaded = false;
+    let slideCharts = {};
 
     // ========== Text Converter ==========
     const PRICING = {
@@ -863,10 +887,13 @@
         const { data } = await supabaseClient.from('slide_logs').select('*').order('timestamp', { ascending: false });
         const sl = data || [];
         const ok = sl.filter(r => r.status === 'success');
+
         document.getElementById('slideTotal').textContent       = ok.length;
         document.getElementById('slideSub').textContent         = `エラー: ${sl.filter(r => r.status === 'error').length}件`;
         document.getElementById('slideAvgCount').textContent    = ok.length ? (ok.reduce((s, r) => s + (r.slide_count || 0), 0) / ok.length).toFixed(1) : '-';
         document.getElementById('slideAvgDuration').textContent = ok.length ? (ok.reduce((s, r) => s + (r.duration_sec || 0), 0) / ok.length).toFixed(0) : '-';
+
+        // 履歴テーブル
         const tbody = document.getElementById('slideHistory');
         tbody.innerHTML = '';
         sl.slice(0, 20).forEach(r => {
@@ -877,11 +904,40 @@
             <td>${r.duration_sec != null ? Math.round(r.duration_sec) + 's' : '-'}</td>
             <td><span class="badge badge-${r.status}">${r.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>`;
         });
+
+        // 月別グラフ
+        const monthMap = {};
+        ok.forEach(r => {
+          const m = r.timestamp.substring(0, 7);
+          if (!monthMap[m]) monthMap[m] = { count: 0, dur: 0 };
+          monthMap[m].count++;
+          monthMap[m].dur += r.duration_sec || 0;
+        });
+        const months = Object.entries(monthMap).sort((a, b) => a[0].localeCompare(b[0]));
+        const mLabels = months.map(d => d[0]);
+
+        Object.values(slideCharts).forEach(c => c.destroy());
+        slideCharts = {};
+
+        slideCharts.monthly = new Chart(document.getElementById('slideMonthlyChart'), {
+          type: 'bar',
+          data: { labels: mLabels, datasets: [{ label: '生成数', data: months.map(d => d[1].count), backgroundColor: 'rgba(245,158,11,0.75)', borderRadius: 4 }] },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        slideCharts.dur = new Chart(document.getElementById('slideDurChart'), {
+          type: 'bar',
+          data: { labels: mLabels, datasets: [{ label: '平均処理時間 (秒)', data: months.map(d => d[1].count ? (d[1].dur / d[1].count).toFixed(1) : 0), backgroundColor: 'rgba(124,58,237,0.7)', borderRadius: 4 }] },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        document.getElementById('slides-loading').style.display   = 'none';
+        document.getElementById('slides-dashboard').style.display = 'block';
+        slidesLoaded = true;
       } catch (e) { console.error('slide stats error:', e); }
     }
 
     loadStats();
-    loadSlideStats();
     setInterval(loadStats, 30000);
     setInterval(loadSlideStats, 30000);
 
