@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text to Obsidian Converter - Dashboard</title>
+  <title>Blinx Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -22,18 +22,18 @@
     .header {
       background: white;
       border-radius: 12px;
-      padding: 24px 30px;
-      margin-bottom: 20px;
+      padding: 20px 30px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 12px;
     }
 
     .header-left h1 {
-      font-size: 28px;
+      font-size: 24px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -44,6 +44,37 @@
 
     .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
+    /* タブ */
+    .tabs {
+      background: white;
+      border-radius: 12px;
+      padding: 6px 16px 0;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover { color: #667eea; }
+    .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* フィルターグループ */
     .filter-group {
       display: flex;
       background: #f0f0f0;
@@ -210,6 +241,9 @@
     .badge-claude  { background: #fff3e0; color: #f57c00; }
     .badge-success { background: #e8f5e9; color: #388e3c; }
     .badge-error   { background: #ffebee; color: #c62828; }
+    .badge-mail    { background: #e3f2fd; color: #1565c0; }
+    .badge-slack   { background: #ede7f6; color: #5e35b1; }
+    .badge-fb      { background: #e8eaf6; color: #1877f2; }
 
     .section-divider {
       background: white;
@@ -237,197 +271,371 @@
 
     .loading { text-align: center; padding: 50px; color: white; font-size: 18px; }
 
+    /* Sales AI 専用 */
+    .sales-status-bar {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+      display: inline-block;
+    }
+
+    .status-dot.running { background: #22c55e; animation: pulse 2s infinite; }
+    .status-dot.stopped { background: #ef4444; }
+
+    @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }
+
+    .sales-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .sales-stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .sales-stat-card:hover { transform: translateY(-3px); }
+    .sales-stat-label { font-size: 12px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sales-stat-value { font-size: 36px; font-weight: 800; line-height: 1; }
+    .sales-stat-sub   { font-size: 11px; color: #999; margin-top: 6px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+    .log-panel {
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 360px;
+      overflow-y: auto;
+      color: #94a3b8;
+    }
+
+    .log-error   { color: #f87171; }
+    .log-ai      { color: #a78bfa; }
+    .log-obsidian{ color: #34d399; }
+    .log-slack   { color: #818cf8; }
+    .log-mail    { color: #60a5fa; }
+    .log-send    { color: #fbbf24; }
+
+    .sales-offline-notice {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      color: #999;
+    }
+
+    .sales-offline-notice h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
+    .sales-offline-notice code { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+
+    .refresh-note { font-size: 11px; color: #999; margin-bottom: 8px; }
+
     @media (max-width: 768px) {
       .charts-grid { grid-template-columns: 1fr; }
       .source-grid { grid-template-columns: 1fr; }
+      .sales-stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+
+    <!-- ヘッダー -->
     <div class="header">
       <div class="header-left">
-        <h1>📊 Text to Obsidian Converter</h1>
-        <p class="subtitle">リアルタイム統計ダッシュボード <span class="period-label" id="periodLabel">全期間</span></p>
+        <h1>⚡ Blinx Dashboard</h1>
+        <p class="subtitle">Blinx 統合管理ダッシュボード</p>
       </div>
-      <div class="header-right">
+    </div>
+
+    <!-- タブ -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('converter', this)">🎙️ Text Converter</button>
+      <button class="tab-btn" onclick="switchTab('sales', this)">📨 Sales AI</button>
+    </div>
+
+    <!-- ========== TAB: Text Converter ========== -->
+    <div id="tab-converter" class="tab-panel active">
+
+      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:flex-end;gap:10px;">
         <div class="filter-group">
-          <button class="filter-btn active" onclick="setFilter('all')">全体</button>
-          <button class="filter-btn" onclick="setFilter('lastMonth')">先月</button>
-          <button class="filter-btn" onclick="setFilter('thisMonth')">今月</button>
+          <button class="filter-btn active" onclick="setFilter('all', this)">全体</button>
+          <button class="filter-btn" onclick="setFilter('lastMonth', this)">先月</button>
+          <button class="filter-btn" onclick="setFilter('thisMonth', this)">今月</button>
         </div>
         <button class="refresh-btn" onclick="loadStats()">🔄 更新</button>
       </div>
-    </div>
 
-    <div id="loading" class="loading">データを読み込んでいます...</div>
+      <div id="tc-loading" class="loading">データを読み込んでいます...</div>
 
-    <div id="dashboard" style="display: none;">
+      <div id="tc-dashboard" style="display: none;">
 
-      <!-- Source Cards -->
-      <div class="source-grid">
-        <div class="source-card plaud">
-          <div class="source-header">
-            <div class="source-icon">🎙️</div>
-            <div>
-              <div class="source-title">PlaudAI 音声録音</div>
-              <div class="source-desc">音声 → 文字起こし → 議事録</div>
+        <!-- Source Cards -->
+        <div class="source-grid">
+          <div class="source-card plaud">
+            <div class="source-header">
+              <div class="source-icon">🎙️</div>
+              <div>
+                <div class="source-title">PlaudAI 音声録音</div>
+                <div class="source-desc">音声 → 文字起こし → 議事録</div>
+              </div>
+            </div>
+            <div class="source-count" id="plaudCount">-</div>
+            <div class="source-sub" id="plaudSub">-</div>
+          </div>
+
+          <div class="source-card lark">
+            <div class="source-header">
+              <div class="source-icon">📹</div>
+              <div>
+                <div class="source-title">Lark 録画</div>
+                <div class="source-desc">テキスト → 議事録</div>
+              </div>
+            </div>
+            <div class="source-count" id="larkCount">-</div>
+            <div class="source-sub" id="larkSub">-</div>
+          </div>
+
+          <div class="source-card total">
+            <div class="source-header">
+              <div class="source-icon">📊</div>
+              <div>
+                <div class="source-title">合計</div>
+                <div class="source-desc">全ソース合算 <span class="period-label" id="periodLabel">全期間</span></div>
+              </div>
+            </div>
+            <div class="source-count" id="totalProcessed">-</div>
+            <div class="source-sub" id="totalSub">-</div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">総トークン数</div>
+            <div class="stat-value" id="totalTokens">-</div>
+            <div class="stat-subvalue" id="tokenBreakdown">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">推定コスト</div>
+            <div class="stat-value" id="totalCost">-</div>
+            <div class="stat-subvalue" id="costPerFile">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">平均処理時間</div>
+            <div class="stat-value" id="avgDuration">-</div>
+            <div class="stat-subvalue" id="successRate">-</div>
+          </div>
+        </div>
+
+        <!-- 全体のみ: 月別グラフ -->
+        <div id="monthlyCharts" style="display:none;">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">📅 月別処理数推移</div>
+              <canvas id="monthlyCountChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">🪙 月別トークン使用量</div>
+              <canvas id="monthlyTokensChart"></canvas>
             </div>
           </div>
-          <div class="source-count" id="plaudCount">-</div>
-          <div class="source-sub" id="plaudSub">-</div>
-        </div>
-
-        <div class="source-card lark">
-          <div class="source-header">
-            <div class="source-icon">📹</div>
-            <div>
-              <div class="source-title">Lark 録画</div>
-              <div class="source-desc">テキスト → 議事録</div>
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">💴 月別コスト推移</div>
+              <canvas id="monthlyCostChart"></canvas>
             </div>
           </div>
-          <div class="source-count" id="larkCount">-</div>
-          <div class="source-sub" id="larkSub">-</div>
         </div>
 
-        <div class="source-card total">
-          <div class="source-header">
-            <div class="source-icon">📊</div>
-            <div>
-              <div class="source-title">合計</div>
-              <div class="source-desc">全ソース合算</div>
-            </div>
-          </div>
-          <div class="source-count" id="totalProcessed">-</div>
-          <div class="source-sub" id="totalSub">-</div>
-        </div>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">総トークン数</div>
-          <div class="stat-value" id="totalTokens">-</div>
-          <div class="stat-subvalue" id="tokenBreakdown">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">推定コスト</div>
-          <div class="stat-value" id="totalCost">-</div>
-          <div class="stat-subvalue" id="costPerFile">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平均処理時間</div>
-          <div class="stat-value" id="avgDuration">-</div>
-          <div class="stat-subvalue" id="successRate">-</div>
-        </div>
-      </div>
-
-      <!-- 全体のみ: 月別グラフ -->
-      <div id="monthlyCharts" style="display:none;">
+        <!-- Charts -->
         <div class="charts-grid">
           <div class="chart-card">
-            <div class="chart-title">📅 月別処理数推移</div>
-            <canvas id="monthlyCountChart"></canvas>
+            <div class="chart-title">📈 日別処理数推移</div>
+            <canvas id="dailyChart"></canvas>
           </div>
           <div class="chart-card">
-            <div class="chart-title">🪙 月別トークン使用量</div>
-            <canvas id="monthlyTokensChart"></canvas>
+            <div class="chart-title">🗂️ ソース別内訳</div>
+            <canvas id="sourceChart"></canvas>
           </div>
         </div>
+
         <div class="charts-grid">
           <div class="chart-card">
-            <div class="chart-title">💴 月別コスト推移</div>
-            <canvas id="monthlyCostChart"></canvas>
+            <div class="chart-title">📊 日別トークン使用量</div>
+            <canvas id="tokensChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">💰 日別コスト推移</div>
+            <canvas id="costChart"></canvas>
           </div>
         </div>
+
+        <!-- Slide Section -->
+        <div class="section-divider">🍌 スライド生成</div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">スライド生成数</div>
+            <div class="stat-value" id="slideTotal">-</div>
+            <div class="stat-subvalue" id="slideSub">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">平均スライド枚数</div>
+            <div class="stat-value" id="slideAvgCount">-</div>
+            <div class="stat-subvalue">枚/回</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">平均処理時間</div>
+            <div class="stat-value" id="slideAvgDuration">-</div>
+            <div class="stat-subvalue">秒/回</div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="chart-title">🍌 スライド生成履歴（最新20件）</div>
+          <table>
+            <thead>
+              <tr><th>日時</th><th>タイトル</th><th>スライド数</th><th>処理時間</th><th>状態</th></tr>
+            </thead>
+            <tbody id="slideHistory"></tbody>
+          </table>
+        </div>
+
+        <!-- Conversion History -->
+        <div class="section-divider">🎙️ 音声・テキスト変換</div>
+        <div class="table-card">
+          <div class="chart-title">📄 処理履歴（最新30件）</div>
+          <table>
+            <thead>
+              <tr><th>日時</th><th>ファイル名</th><th>ソース</th><th>AIプロバイダー</th><th>トークン数</th><th>コスト</th><th>処理時間</th><th>状態</th></tr>
+            </thead>
+            <tbody id="recentFiles"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /tab-converter -->
+
+    <!-- ========== TAB: Sales AI ========== -->
+    <div id="tab-sales" class="tab-panel">
+
+      <!-- オフライン時 -->
+      <div id="sales-offline" class="sales-offline-notice" style="display:none;">
+        <h3>⚠️ Sales AI サーバーに接続できません</h3>
+        <p style="margin-top:8px;">ローカルサーバーが起動しているか確認してください。</p>
+        <p style="margin-top:8px;"><code>python dashboard.py</code> を実行して <code>localhost:8899</code> を起動してください。</p>
+        <button class="refresh-btn" style="margin-top:16px;" onclick="salesLoad()">🔄 再接続</button>
       </div>
 
-      <!-- Charts -->
-      <div class="charts-grid">
+      <!-- データ表示 -->
+      <div id="sales-content">
+
+        <!-- ステータスバー -->
+        <div class="sales-status-bar">
+          <span class="status-dot" id="sales-dot"></span>
+          <span id="sales-status-text">確認中...</span>
+          <span style="margin-left:auto;font-size:11px;" id="sales-refresh-note"></span>
+        </div>
+
+        <!-- 5枚のカード -->
+        <div class="sales-stats-grid">
+          <div class="sales-stat-card">
+            <div class="sales-stat-label">返信待ち（メール）</div>
+            <div class="sales-stat-value" style="color:#1565c0" id="s-pending-mail">-</div>
+            <div class="sales-stat-sub">*_mail_*</div>
+          </div>
+          <div class="sales-stat-card">
+            <div class="sales-stat-label">返信待ち（Slack）</div>
+            <div class="sales-stat-value" style="color:#5e35b1" id="s-pending-slack">-</div>
+            <div class="sales-stat-sub">*_slack_*</div>
+          </div>
+          <div class="sales-stat-card">
+            <div class="sales-stat-label">返信待ち（FB）</div>
+            <div class="sales-stat-value" style="color:#1877f2" id="s-pending-fb">-</div>
+            <div class="sales-stat-sub">*_fb_*</div>
+          </div>
+          <div class="sales-stat-card">
+            <div class="sales-stat-label">送信済み</div>
+            <div class="sales-stat-value" style="color:#388e3c" id="s-sent">-</div>
+            <div class="sales-stat-sub">sent/</div>
+          </div>
+          <div class="sales-stat-card">
+            <div class="sales-stat-label">却下・無視</div>
+            <div class="sales-stat-value" style="color:#666" id="s-dismissed">-</div>
+            <div class="sales-stat-sub">dismissed/</div>
+          </div>
+        </div>
+
+        <!-- 週次グラフ -->
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-title">📅 直近1週間の処理件数</div>
+          <canvas id="salesWeeklyChart" height="80"></canvas>
+        </div>
+
+        <!-- 返信待ち・送信済みテーブル -->
+        <div class="two-col">
+          <div class="table-card">
+            <div class="chart-title" style="margin-bottom:12px;">📬 返信待ち（直近）</div>
+            <table>
+              <thead><tr><th>種別</th><th>ファイル</th><th>日時</th></tr></thead>
+              <tbody id="s-tbl-pending"><tr><td colspan="3" style="color:#ccc;padding:12px 0">読み込み中...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-card">
+            <div class="chart-title" style="margin-bottom:12px;">✅ 送信済み（直近）</div>
+            <table>
+              <thead><tr><th>ファイル</th><th>日時</th></tr></thead>
+              <tbody id="s-tbl-sent"><tr><td colspan="2" style="color:#ccc;padding:12px 0">読み込み中...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ライブログ -->
         <div class="chart-card">
-          <div class="chart-title">📈 日別処理数推移</div>
-          <canvas id="dailyChart"></canvas>
+          <div class="chart-title" style="margin-bottom:12px;">🖥️ ライブログ（直近80行）</div>
+          <div class="log-panel" id="s-log">読み込み中...</div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">🗂️ ソース別内訳</div>
-          <canvas id="sourceChart"></canvas>
-        </div>
-      </div>
 
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-title">📊 日別トークン使用量</div>
-          <canvas id="tokensChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">💰 日別コスト推移</div>
-          <canvas id="costChart"></canvas>
-        </div>
-      </div>
+      </div><!-- /sales-content -->
+    </div><!-- /tab-sales -->
 
-      <!-- Slide Section Divider -->
-      <div class="section-divider">🍌 スライド生成</div>
-
-      <!-- Slide Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">スライド生成数</div>
-          <div class="stat-value" id="slideTotal">-</div>
-          <div class="stat-subvalue" id="slideSub">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平均スライド枚数</div>
-          <div class="stat-value" id="slideAvgCount">-</div>
-          <div class="stat-subvalue">枚/回</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平均処理時間</div>
-          <div class="stat-value" id="slideAvgDuration">-</div>
-          <div class="stat-subvalue">秒/回</div>
-        </div>
-      </div>
-
-      <!-- Slide History Table -->
-      <div class="table-card" style="margin-bottom:20px;">
-        <div class="chart-title">🍌 スライド生成履歴（最新20件）</div>
-        <table>
-          <thead>
-            <tr>
-              <th>日時</th>
-              <th>タイトル</th>
-              <th>スライド数</th>
-              <th>処理時間</th>
-              <th>状態</th>
-            </tr>
-          </thead>
-          <tbody id="slideHistory"></tbody>
-        </table>
-      </div>
-
-      <!-- Recent Files Table -->
-      <div class="section-divider">🎙️ 音声・テキスト変換</div>
-      <div class="table-card">
-        <div class="chart-title">📄 処理履歴（最新30件）</div>
-        <table>
-          <thead>
-            <tr>
-              <th>日時</th>
-              <th>ファイル名</th>
-              <th>ソース</th>
-              <th>AIプロバイダー</th>
-              <th>トークン数</th>
-              <th>コスト</th>
-              <th>処理時間</th>
-              <th>状態</th>
-            </tr>
-          </thead>
-          <tbody id="recentFiles"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  </div><!-- /container -->
 
   <script>
+    // ========== タブ切り替え ==========
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+      if (name === 'sales' && !salesLoaded) salesLoad();
+    }
+
+    // ========== Text Converter ==========
     const PRICING = {
       claude: {
         'claude-opus-4-5-20251101': { input: 15.0, output: 75.0 },
@@ -445,30 +653,18 @@
     let currentFilter = 'all';
     let charts = {};
 
-    function getSourceType(record) {
-      return record.fileType === 'audio' ? 'plaud' : 'lark';
-    }
-
-    function isClaudeCode(record) {
-      return record.aiProvider === 'claude-code';
-    }
+    function getSourceType(record) { return record.fileType === 'audio' ? 'plaud' : 'lark'; }
+    function isClaudeCode(record)  { return record.aiProvider === 'claude-code'; }
 
     function calculateCost(record) {
-      if (record.status !== 'success') return 0;
-      if (isClaudeCode(record)) return 0;
-      let cost = 0;
-      if (record.aiProvider && record.model && record.inputTokens && record.outputTokens) {
-        const pricing = PRICING[record.aiProvider]?.[record.model];
-        if (pricing) {
-          cost += (record.inputTokens / 1000000) * pricing.input;
-          cost += (record.outputTokens / 1000000) * pricing.output;
-        }
-      }
-      return cost;
+      if (record.status !== 'success' || isClaudeCode(record)) return 0;
+      const pricing = PRICING[record.aiProvider]?.[record.model];
+      if (!pricing) return 0;
+      return (record.inputTokens / 1000000) * pricing.input + (record.outputTokens / 1000000) * pricing.output;
     }
 
     function formatNumber(num) { return Math.round(num).toLocaleString('ja-JP'); }
-    function formatCost(cost)   { return '$' + cost.toFixed(4); }
+    function formatCost(cost)  { return '$' + cost.toFixed(4); }
     function formatTokens(record) {
       if (isClaudeCode(record)) return '-';
       return formatNumber((record.inputTokens || 0) + (record.outputTokens || 0));
@@ -481,14 +677,14 @@
     function getFilterRange(filter) {
       const now = new Date();
       if (filter === 'thisMonth') {
-        const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-        return { start, end, label: `今月 (${now.getFullYear()}/${now.getMonth() + 1})` };
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1),
+                 end:   new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59),
+                 label: `今月 (${now.getFullYear()}/${now.getMonth() + 1})` };
       }
       if (filter === 'lastMonth') {
-        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const end   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-        return { start, end, label: `先月 (${now.getFullYear()}/${now.getMonth()})` };
+        return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+                 end:   new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59),
+                 label: `先月 (${now.getFullYear()}/${now.getMonth()})` };
       }
       return { start: null, end: null, label: '全期間' };
     }
@@ -496,82 +692,62 @@
     function applyFilter(records, filter) {
       const range = getFilterRange(filter);
       if (!range.start) return records;
-      return records.filter(r => {
-        const t = new Date(r.timestamp);
-        return t >= range.start && t <= range.end;
-      });
+      return records.filter(r => { const t = new Date(r.timestamp); return t >= range.start && t <= range.end; });
     }
 
-    function setFilter(filter) {
+    function setFilter(filter, btn) {
       currentFilter = filter;
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      document.querySelectorAll('#tab-converter .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
       renderDashboard();
     }
 
-    function destroyCharts() {
-      Object.values(charts).forEach(c => c.destroy());
-      charts = {};
-    }
+    function destroyCharts() { Object.values(charts).forEach(c => c.destroy()); charts = {}; }
 
     function renderDashboard() {
-      const filtered = applyFilter(allRecords, currentFilter);
-      const range    = getFilterRange(currentFilter);
+      const filtered      = applyFilter(allRecords, currentFilter);
+      const range         = getFilterRange(currentFilter);
+      const successRecs   = filtered.filter(r => r.status === 'success');
+      const errorCount    = filtered.filter(r => r.status === 'error').length;
+      const plaudRecs     = successRecs.filter(r => getSourceType(r) === 'plaud');
+      const larkRecs      = successRecs.filter(r => getSourceType(r) === 'lark');
+      const apiRecs       = successRecs.filter(r => !isClaudeCode(r));
+      const totalIn       = apiRecs.reduce((s, r) => s + (r.inputTokens || 0), 0);
+      const totalOut      = apiRecs.reduce((s, r) => s + (r.outputTokens || 0), 0);
+      const totalCost     = apiRecs.reduce((s, r) => s + calculateCost(r), 0);
+      const totalDur      = successRecs.reduce((s, r) => s + (r.totalDuration || 0), 0);
 
-      document.getElementById('periodLabel').textContent = range.label;
+      document.getElementById('periodLabel').textContent  = range.label;
+      document.getElementById('plaudCount').textContent   = plaudRecs.length;
+      document.getElementById('plaudSub').textContent     = '音声ファイル処理';
+      document.getElementById('larkCount').textContent    = larkRecs.length;
+      document.getElementById('larkSub').textContent      = 'テキストファイル処理';
+      document.getElementById('totalProcessed').textContent = successRecs.length;
+      document.getElementById('totalSub').textContent     = `エラー: ${errorCount}件 | 成功率: ${filtered.length ? ((successRecs.length / filtered.length) * 100).toFixed(1) : 0}%`;
+      document.getElementById('totalTokens').textContent  = formatNumber(totalIn + totalOut);
+      document.getElementById('tokenBreakdown').textContent = `入力: ${formatNumber(totalIn)} | 出力: ${formatNumber(totalOut)}`;
+      document.getElementById('totalCost').textContent    = formatCost(totalCost);
+      document.getElementById('costPerFile').textContent  = `平均: ${formatCost(successRecs.length ? totalCost / successRecs.length : 0)}/ファイル`;
+      document.getElementById('avgDuration').textContent  = ((successRecs.length ? totalDur / successRecs.length : 0) / 1000).toFixed(1) + 's';
+      document.getElementById('successRate').textContent  = `成功: ${successRecs.length}件 | エラー: ${errorCount}件`;
 
-      const successRecords = filtered.filter(r => r.status === 'success');
-      const errorCount     = filtered.filter(r => r.status === 'error').length;
-
-      const plaudRecords = successRecords.filter(r => getSourceType(r) === 'plaud');
-      const larkRecords  = successRecords.filter(r => getSourceType(r) === 'lark');
-
-      // Source cards
-      document.getElementById('plaudCount').textContent = plaudRecords.length;
-      document.getElementById('plaudSub').textContent   = `音声ファイル処理`;
-      document.getElementById('larkCount').textContent  = larkRecords.length;
-      document.getElementById('larkSub').textContent    = `テキストファイル処理`;
-      document.getElementById('totalProcessed').textContent = successRecords.length;
-      document.getElementById('totalSub').textContent   =
-        `エラー: ${errorCount}件 | 成功率: ${filtered.length ? ((successRecords.length / filtered.length) * 100).toFixed(1) : 0}%`;
-
-      // Stats
-      const apiRecords = successRecords.filter(r => !isClaudeCode(r));
-      const totalInputTokens  = apiRecords.reduce((s, r) => s + (r.inputTokens || 0), 0);
-      const totalOutputTokens = apiRecords.reduce((s, r) => s + (r.outputTokens || 0), 0);
-      const totalTokens = totalInputTokens + totalOutputTokens;
-      const totalCost   = apiRecords.reduce((s, r) => s + calculateCost(r), 0);
-      const totalDur    = successRecords.reduce((s, r) => s + (r.totalDuration || 0), 0);
-      const avgDuration = successRecords.length ? totalDur / successRecords.length : 0;
-
-      document.getElementById('totalTokens').textContent   = formatNumber(totalTokens);
-      document.getElementById('tokenBreakdown').textContent = `入力: ${formatNumber(totalInputTokens)} | 出力: ${formatNumber(totalOutputTokens)}`;
-      document.getElementById('totalCost').textContent      = formatCost(totalCost);
-      document.getElementById('costPerFile').textContent    = `平均: ${formatCost(successRecords.length ? totalCost / successRecords.length : 0)}/ファイル`;
-      document.getElementById('avgDuration').textContent    = (avgDuration / 1000).toFixed(1) + 's';
-      document.getElementById('successRate').textContent    = `成功: ${successRecords.length}件 | エラー: ${errorCount}件`;
-
-      // 全体フィルター時のみ月別グラフを表示
-      const monthlySection = document.getElementById('monthlyCharts');
-      monthlySection.style.display = currentFilter === 'all' ? 'block' : 'none';
+      document.getElementById('monthlyCharts').style.display = currentFilter === 'all' ? 'block' : 'none';
 
       destroyCharts();
-      renderCharts(successRecords, filtered);
-      if (currentFilter === 'all') renderMonthlyCharts(successRecords);
+      renderCharts(successRecs);
+      if (currentFilter === 'all') renderMonthlyCharts(successRecs);
       renderRecentFiles(filtered);
 
-      document.getElementById('loading').style.display  = 'none';
-      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('tc-loading').style.display    = 'none';
+      document.getElementById('tc-dashboard').style.display  = 'block';
     }
 
-    function renderCharts(successRecords, allFiltered) {
-      // Daily chart (Plaud vs Lark)
+    function renderCharts(successRecs) {
       const dailyMap = {};
-      successRecords.forEach(r => {
+      successRecs.forEach(r => {
         const date = new Date(r.timestamp).toISOString().split('T')[0];
         if (!dailyMap[date]) dailyMap[date] = { plaud: 0, lark: 0, cost: 0, tokens: 0 };
-        const src = getSourceType(r);
-        dailyMap[date][src]++;
+        dailyMap[date][getSourceType(r)]++;
         dailyMap[date].cost   += calculateCost(r);
         dailyMap[date].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
       });
@@ -581,172 +757,67 @@
 
       charts.daily = new Chart(document.getElementById('dailyChart'), {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'PlaudAI音声',
-              data: dailyData.map(d => d[1].plaud),
-              backgroundColor: 'rgba(25, 118, 210, 0.7)',
-              stack: 'source'
-            },
-            {
-              label: 'Lark議事録',
-              data: dailyData.map(d => d[1].lark),
-              backgroundColor: 'rgba(123, 31, 162, 0.7)',
-              stack: 'source'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '処理数' } } }
-        }
+        data: { labels, datasets: [
+          { label: 'PlaudAI音声', data: dailyData.map(d => d[1].plaud), backgroundColor: 'rgba(25,118,210,0.7)', stack: 'source' },
+          { label: 'Lark議事録', data: dailyData.map(d => d[1].lark),  backgroundColor: 'rgba(123,31,162,0.7)',  stack: 'source' }
+        ]},
+        options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
       });
 
-      // Source donut
       charts.source = new Chart(document.getElementById('sourceChart'), {
         type: 'doughnut',
         data: {
           labels: ['PlaudAI 音声録音', 'Lark 録画'],
-          datasets: [{
-            data: [
-              successRecords.filter(r => getSourceType(r) === 'plaud').length,
-              successRecords.filter(r => getSourceType(r) === 'lark').length
-            ],
-            backgroundColor: ['rgba(25, 118, 210, 0.7)', 'rgba(123, 31, 162, 0.7)']
-          }]
+          datasets: [{ data: [successRecs.filter(r => getSourceType(r) === 'plaud').length, successRecs.filter(r => getSourceType(r) === 'lark').length],
+                       backgroundColor: ['rgba(25,118,210,0.7)', 'rgba(123,31,162,0.7)'] }]
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
-      // Tokens chart
       charts.tokens = new Chart(document.getElementById('tokensChart'), {
         type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'トークン数',
-            data: dailyData.map(d => d[1].tokens),
-            borderColor: 'rgba(102, 126, 234, 1)',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            fill: true,
-            tension: 0.3
-          }]
-        },
+        data: { labels, datasets: [{ label: 'トークン数', data: dailyData.map(d => d[1].tokens), borderColor: 'rgba(102,126,234,1)', backgroundColor: 'rgba(102,126,234,0.1)', fill: true, tension: 0.3 }] },
         options: { responsive: true }
       });
 
-      // Cost chart
       charts.cost = new Chart(document.getElementById('costChart'), {
         type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'コスト ($)',
-            data: dailyData.map(d => d[1].cost),
-            borderColor: 'rgba(118, 75, 162, 1)',
-            backgroundColor: 'rgba(118, 75, 162, 0.1)',
-            fill: true,
-            tension: 0.3
-          }]
-        },
+        data: { labels, datasets: [{ label: 'コスト ($)', data: dailyData.map(d => d[1].cost), borderColor: 'rgba(118,75,162,1)', backgroundColor: 'rgba(118,75,162,0.1)', fill: true, tension: 0.3 }] },
         options: { responsive: true }
       });
     }
 
-    function renderMonthlyCharts(successRecords) {
-      // 月別集計
+    function renderMonthlyCharts(successRecs) {
       const monthlyMap = {};
-      successRecords.forEach(r => {
-        const month = new Date(r.timestamp).toISOString().substring(0, 7); // YYYY-MM
+      successRecs.forEach(r => {
+        const month = new Date(r.timestamp).toISOString().substring(0, 7);
         if (!monthlyMap[month]) monthlyMap[month] = { plaud: 0, lark: 0, tokens: 0, cost: 0 };
         monthlyMap[month][getSourceType(r)]++;
         monthlyMap[month].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
         monthlyMap[month].cost   += calculateCost(r);
       });
+      const md = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0]));
+      const labels = md.map(d => d[0]);
 
-      const monthlyData = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0]));
-      const labels = monthlyData.map(d => d[0]); // YYYY-MM
-
-      // 月別処理数推移（積み上げバー）
       charts.monthlyCount = new Chart(document.getElementById('monthlyCountChart'), {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'PlaudAI音声',
-              data: monthlyData.map(d => d[1].plaud),
-              backgroundColor: 'rgba(25, 118, 210, 0.7)',
-              stack: 'source'
-            },
-            {
-              label: 'Lark議事録',
-              data: monthlyData.map(d => d[1].lark),
-              backgroundColor: 'rgba(123, 31, 162, 0.7)',
-              stack: 'source'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'bottom' } },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, title: { display: true, text: '処理数' }, ticks: { stepSize: 1 } }
-          }
-        }
+        data: { labels, datasets: [
+          { label: 'PlaudAI音声', data: md.map(d => d[1].plaud), backgroundColor: 'rgba(25,118,210,0.7)', stack: 'source' },
+          { label: 'Lark議事録', data: md.map(d => d[1].lark),  backgroundColor: 'rgba(123,31,162,0.7)',  stack: 'source' }
+        ]},
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true, ticks: { stepSize: 1 } } } }
       });
 
-      // 月別トークン使用量（バー）
       charts.monthlyTokens = new Chart(document.getElementById('monthlyTokensChart'), {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'トークン数',
-            data: monthlyData.map(d => d[1].tokens),
-            backgroundColor: 'rgba(102, 126, 234, 0.7)',
-            borderColor: 'rgba(102, 126, 234, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'bottom' } },
-          scales: { y: { title: { display: true, text: 'トークン数' } } }
-        }
+        data: { labels, datasets: [{ label: 'トークン数', data: md.map(d => d[1].tokens), backgroundColor: 'rgba(102,126,234,0.7)' }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
 
-      // 月別コスト推移（バー）
       charts.monthlyCost = new Chart(document.getElementById('monthlyCostChart'), {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'コスト ($)',
-            data: monthlyData.map(d => d[1].cost || 0),
-            backgroundColor: 'rgba(118, 75, 162, 0.7)',
-            borderColor: 'rgba(118, 75, 162, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'bottom' } },
-          scales: {
-            y: {
-              title: { display: true, text: 'コスト ($)' },
-              ticks: { callback: v => '$' + v.toFixed(4) }
-            }
-          }
-        }
+        data: { labels, datasets: [{ label: 'コスト ($)', data: md.map(d => d[1].cost || 0), backgroundColor: 'rgba(118,75,162,0.7)' }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: v => '$' + v.toFixed(4) } } } }
       });
     }
 
@@ -754,23 +825,18 @@
       const recent = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
       const tbody  = document.getElementById('recentFiles');
       tbody.innerHTML = '';
-
       recent.forEach(record => {
-        const row  = tbody.insertRow();
         const src  = getSourceType(record);
-        const cost = calculateCost(record);
-
-        const displayName = record.outputFileName || record.fileName;
-        row.innerHTML = `
+        const name = record.outputFileName || record.fileName;
+        tbody.insertRow().innerHTML = `
           <td>${new Date(record.timestamp).toLocaleString('ja-JP')}</td>
-          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${displayName}">${displayName}</td>
+          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
           <td><span class="badge badge-${src}">${src === 'plaud' ? '🎙️ PlaudAI' : '📹 Lark'}</span></td>
           <td><span class="badge badge-claude">${(record.aiProvider || '-').toUpperCase()}</span></td>
           <td>${formatTokens(record)}</td>
           <td>${formatRecordCost(record)}</td>
           <td>${((record.totalDuration || 0) / 1000).toFixed(1)}s</td>
-          <td><span class="badge badge-${record.status}">${record.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>
-        `;
+          <td><span class="badge badge-${record.status}">${record.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>`;
       });
     }
 
@@ -780,88 +846,161 @@
 
     async function loadStats() {
       try {
-        const { data, error } = await supabaseClient
-          .from('conversion_logs')
-          .select('*')
-          .order('timestamp', { ascending: false });
-
-        if (error || !data || data.length === 0) {
-          document.getElementById('loading').textContent = 'データがありません。';
-          return;
-        }
-
-        allRecords = data.map(r => ({
-          id:                    r.id,
-          timestamp:             r.timestamp,
-          fileName:              r.file_name,
-          outputFileName:        r.output_file_name,
-          fileType:              r.file_type,
-          status:                r.status,
-          totalDuration:         r.total_duration,
-          aiProvider:            r.ai_provider,
-          model:                 r.model,
-          inputTokens:           r.input_tokens,
-          outputTokens:          r.output_tokens,
-          conversionDuration:    r.conversion_duration,
-          transcriptionDuration: r.transcription_duration,
-          audioFileSize:         r.audio_file_size,
-          transcriptionLength:   r.transcription_length,
-          errorMessage:          r.error_message,
-          createdAt:             r.created_at,
+        const { data } = await supabaseClient.from('conversion_logs').select('*').order('timestamp', { ascending: false });
+        allRecords = (data || []).map(r => ({
+          id: r.id, timestamp: r.timestamp, fileName: r.file_name, outputFileName: r.output_file_name,
+          fileType: r.file_type, status: r.status, totalDuration: r.total_duration,
+          aiProvider: r.ai_provider, model: r.model, inputTokens: r.input_tokens, outputTokens: r.output_tokens,
         }));
-
         renderDashboard();
-      } catch (error) {
-        document.getElementById('loading').textContent = 'エラー: ' + error.message;
+      } catch (e) {
+        document.getElementById('tc-loading').textContent = 'エラー: ' + e.message;
       }
     }
 
     async function loadSlideStats() {
       try {
-        const { data, error } = await supabaseClient
-          .from('slide_logs')
-          .select('*')
-          .order('timestamp', { ascending: false });
-
-        if (error || !data) return;
-
-        const success = data.filter(r => r.status === 'success');
-        const errCount = data.filter(r => r.status === 'error').length;
-
-        document.getElementById('slideTotal').textContent = success.length;
-        document.getElementById('slideSub').textContent = `エラー: ${errCount}件`;
-
-        const avgCount = success.length
-          ? (success.reduce((s, r) => s + (r.slide_count || 0), 0) / success.length).toFixed(1)
-          : '-';
-        document.getElementById('slideAvgCount').textContent = avgCount;
-
-        const avgDur = success.length
-          ? (success.reduce((s, r) => s + (r.duration_sec || 0), 0) / success.length).toFixed(0)
-          : '-';
-        document.getElementById('slideAvgDuration').textContent = avgDur;
-
+        const { data } = await supabaseClient.from('slide_logs').select('*').order('timestamp', { ascending: false });
+        const sl = data || [];
+        const ok = sl.filter(r => r.status === 'success');
+        document.getElementById('slideTotal').textContent       = ok.length;
+        document.getElementById('slideSub').textContent         = `エラー: ${sl.filter(r => r.status === 'error').length}件`;
+        document.getElementById('slideAvgCount').textContent    = ok.length ? (ok.reduce((s, r) => s + (r.slide_count || 0), 0) / ok.length).toFixed(1) : '-';
+        document.getElementById('slideAvgDuration').textContent = ok.length ? (ok.reduce((s, r) => s + (r.duration_sec || 0), 0) / ok.length).toFixed(0) : '-';
         const tbody = document.getElementById('slideHistory');
         tbody.innerHTML = '';
-        data.slice(0, 20).forEach(r => {
-          const row = tbody.insertRow();
-          row.innerHTML = `
+        sl.slice(0, 20).forEach(r => {
+          tbody.insertRow().innerHTML = `
             <td>${new Date(r.timestamp).toLocaleString('ja-JP')}</td>
-            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title || '-'}">${r.title || '-'}</td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.title || '-'}</td>
             <td>${r.slide_count != null ? r.slide_count + '枚' : '-'}</td>
             <td>${r.duration_sec != null ? Math.round(r.duration_sec) + 's' : '-'}</td>
-            <td><span class="badge badge-${r.status}">${r.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>
-          `;
+            <td><span class="badge badge-${r.status}">${r.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>`;
         });
-      } catch (e) {
-        console.error('slide stats error:', e);
-      }
+      } catch (e) { console.error('slide stats error:', e); }
     }
 
     loadStats();
     loadSlideStats();
     setInterval(loadStats, 30000);
     setInterval(loadSlideStats, 30000);
+
+    // ========== Sales AI ==========
+    const SALES_API = 'http://localhost:8899';
+    let salesLoaded = false;
+    let salesWeeklyChart = null;
+    const BADGE_COLORS = { mail: '#1565c0', slack: '#5e35b1', fb: '#1877f2' };
+
+    function salesRenderStats(d) {
+      // ステータスドット
+      const dot = document.getElementById('sales-dot');
+      dot.className = 'status-dot ' + (d.running ? 'running' : 'stopped');
+      document.getElementById('sales-status-text').textContent =
+        d.running ? `稼働中 (PID: ${d.pids})` : '停止中';
+
+      document.getElementById('s-pending-mail').textContent  = d.pending_mail;
+      document.getElementById('s-pending-slack').textContent = d.pending_slack;
+      document.getElementById('s-pending-fb').textContent    = d.pending_fb;
+      document.getElementById('s-sent').textContent          = d.sent;
+      document.getElementById('s-dismissed').textContent     = d.dismissed;
+
+      // 週次グラフ
+      if (d.weekly) {
+        if (salesWeeklyChart) {
+          salesWeeklyChart.data.labels            = d.weekly.labels;
+          salesWeeklyChart.data.datasets[0].data  = d.weekly.sent;
+          salesWeeklyChart.data.datasets[1].data  = d.weekly.dismissed;
+          salesWeeklyChart.update('none');
+        } else {
+          try {
+            salesWeeklyChart = new Chart(document.getElementById('salesWeeklyChart'), {
+              type: 'bar',
+              data: {
+                labels: d.weekly.labels,
+                datasets: [
+                  { label: '送信済み', data: d.weekly.sent, backgroundColor: 'rgba(56,142,60,0.75)', borderRadius: 4, stack: 'w' },
+                  { label: '却下・無視', data: d.weekly.dismissed, backgroundColor: 'rgba(180,180,180,0.5)', borderRadius: 4, stack: 'w' }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                  x: { stacked: true },
+                  y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+              }
+            });
+          } catch(e) { console.error('salesWeeklyChart error:', e); }
+        }
+      }
+
+      // 返信待ちテーブル
+      const tp = document.getElementById('s-tbl-pending');
+      if (!d.recent_pending || d.recent_pending.length === 0) {
+        tp.innerHTML = "<tr><td colspan='3' style='color:#ccc;padding:12px 0'>なし</td></tr>";
+      } else {
+        tp.innerHTML = d.recent_pending.map(f => {
+          const bc = BADGE_COLORS[f.type] || '#666';
+          const bg = f.type === 'mail' ? '#e3f2fd' : (f.type === 'fb' ? '#e8eaf6' : '#ede7f6');
+          return `<tr>
+            <td><span class="badge" style="background:${bg};color:${bc}">${f.type.toUpperCase()}</span></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</td>
+            <td style="white-space:nowrap;color:#999">${f.time}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      // 送信済みテーブル
+      const ts = document.getElementById('s-tbl-sent');
+      if (!d.recent_sent || d.recent_sent.length === 0) {
+        ts.innerHTML = "<tr><td colspan='2' style='color:#ccc;padding:12px 0'>なし</td></tr>";
+      } else {
+        ts.innerHTML = d.recent_sent.map(f =>
+          `<tr><td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</td><td style="white-space:nowrap;color:#999">${f.time}</td></tr>`
+        ).join('');
+      }
+
+      document.getElementById('sales-refresh-note').textContent =
+        `10秒ごとに更新（最終: ${new Date().toLocaleTimeString('ja-JP')})`;
+      salesLoaded = true;
+    }
+
+    function salesRenderLog(lines) {
+      const colorMap = [
+        ['[ERROR]','log-error'],['[AI]','log-ai'],['[OBSIDIAN]','log-obsidian'],
+        ['[SLACK]','log-slack'],['[MAIL]','log-mail'],['[WATCHER]','log-mail'],['[SEND]','log-send']
+      ];
+      const logEl = document.getElementById('s-log');
+      const wasAtBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40;
+      logEl.innerHTML = lines.map(l => {
+        const esc = l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const cls = (colorMap.find(([k]) => esc.includes(k)) || [, ''])[1];
+        return cls ? `<span class="${cls}">${esc}</span>` : esc;
+      }).join('\n');
+      if (wasAtBottom) logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function salesLoad() {
+      document.getElementById('sales-offline').style.display  = 'none';
+      document.getElementById('sales-content').style.display  = 'block';
+      try {
+        const [statsRes, logRes] = await Promise.all([
+          fetch(SALES_API + '/api/stats', { signal: AbortSignal.timeout(5000) }),
+          fetch(SALES_API + '/api/log',   { signal: AbortSignal.timeout(5000) })
+        ]);
+        salesRenderStats(await statsRes.json());
+        salesRenderLog((await logRes.json()).lines);
+      } catch(e) {
+        document.getElementById('sales-offline').style.display  = 'block';
+        document.getElementById('sales-content').style.display  = 'none';
+        console.warn('Sales AI unreachable:', e.message);
+      }
+    }
+
+    setInterval(() => {
+      if (document.getElementById('tab-sales').classList.contains('active')) salesLoad();
+    }, 10000);
   </script>
 </body>
 </html>
