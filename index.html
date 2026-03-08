@@ -359,6 +359,29 @@
       .sales-stats-grid { grid-template-columns: repeat(2, 1fr); }
       .two-col { grid-template-columns: 1fr; }
     }
+
+    /* IP トラッカー */
+    .tracker-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .tracker-kpi-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .tracker-kpi-card:hover { transform: translateY(-3px); }
+    .tracker-kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tracker-kpi-value { font-size: 36px; font-weight: 800; line-height: 1; color: #333; }
+    .badge-bot     { background: #ffebee; color: #c62828; }
+    .badge-human   { background: #e8f5e9; color: #388e3c; }
+    .badge-hosting { background: #fff3e0; color: #f57c00; }
+    .badge-isp     { background: #e3f2fd; color: #1565c0; }
+    .badge-business{ background: #f3e5f5; color: #7b1fa2; }
   </style>
 </head>
 <body>
@@ -377,6 +400,7 @@
       <button class="tab-btn active" onclick="switchTab('converter', this)">🎙️ Text Converter</button>
       <button class="tab-btn" onclick="switchTab('slides', this)">🍌 スライド生成</button>
       <button class="tab-btn" onclick="switchTab('sales', this)">📨 Sales AI</button>
+      <button class="tab-btn" onclick="switchTab('tracker', this)">🌐 IP トラッカー</button>
     </div>
 
     <!-- ========== TAB: Text Converter ========== -->
@@ -643,6 +667,75 @@
       </div><!-- /sales-content -->
     </div><!-- /tab-sales -->
 
+    <!-- ========== TAB: IP トラッカー ========== -->
+    <div id="tab-tracker" class="tab-panel">
+
+      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div id="tracker-site-filter" class="filter-group">
+          <button class="filter-btn active" onclick="trackerSetSite('__all__', this)">🌐 全体</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="tracker-last-updated" style="font-size:11px;color:#999;"></span>
+          <button class="refresh-btn" onclick="trackerLoad()">🔄 更新</button>
+        </div>
+      </div>
+
+      <div id="tracker-loading" class="loading">データを読み込んでいます...</div>
+      <div id="tracker-error" style="display:none;background:white;border-radius:12px;padding:30px;text-align:center;color:#c62828;box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>
+
+      <div id="tracker-dashboard" style="display:none;">
+
+        <!-- KPI Cards -->
+        <div class="tracker-kpi-grid">
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">総訪問数</div>
+            <div class="tracker-kpi-value" id="tr-total">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">ユニークIP</div>
+            <div class="tracker-kpi-value" id="tr-unique">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">🤖 ボット</div>
+            <div class="tracker-kpi-value" style="color:#c62828;" id="tr-bots">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">👤 人間</div>
+            <div class="tracker-kpi-value" style="color:#388e3c;" id="tr-humans">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">サイト数</div>
+            <div class="tracker-kpi-value" style="background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="tr-sites">—</div>
+          </div>
+        </div>
+
+        <!-- サイト別サマリー（全体表示時のみ） -->
+        <div id="tr-summary-section" class="table-card" style="margin-bottom:20px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 サイト別サマリー</div>
+          <table>
+            <thead>
+              <tr><th>サイト</th><th>訪問数</th><th>ユニークIP</th><th>🤖 ボット</th><th>👤 人間</th><th>最終訪問</th></tr>
+            </thead>
+            <tbody id="tr-summary-body"></tbody>
+          </table>
+        </div>
+
+        <!-- 訪問履歴 -->
+        <div class="table-card">
+          <div class="chart-title" style="margin-bottom:12px;" id="tr-table-title">📋 訪問履歴（最新50件）</div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr><th>日時（JST）</th><th>サイト</th><th>IP</th><th>国</th><th>会社名</th><th>判定</th><th>流入元</th><th>ページ</th></tr>
+              </thead>
+              <tbody id="tr-visits-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /tab-tracker -->
+
   </div><!-- /container -->
 
   <script>
@@ -652,8 +745,9 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
       btn.classList.add('active');
-      if (name === 'sales'  && !salesLoaded)  salesLoad();
-      if (name === 'slides' && !slidesLoaded) loadSlideStats();
+      if (name === 'sales'   && !salesLoaded)   salesLoad();
+      if (name === 'slides'  && !slidesLoaded)  loadSlideStats();
+      if (name === 'tracker' && !trackerLoaded) trackerLoad();
     }
 
     let slidesLoaded = false;
@@ -1057,6 +1151,155 @@
     setInterval(() => {
       if (document.getElementById('tab-sales').classList.contains('active')) salesLoad();
     }, 10000);
+
+    // ========== IP トラッカー ==========
+    const TR_URL = 'https://lfdmnfnrfwljdeoubfvx.supabase.co';
+    const TR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmZG1uZm5yZndsamRlb3ViZnZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODc1MjMsImV4cCI6MjA4NzM2MzUyM30.3X5JQ4UOmjJV3cx5_CBMPicV8yCe_O0pIrhqFquya90';
+    const TR_SITE_NAMES = { 'blinx-lp': 'Blinx株式会社 LP', 'jekca-animatch': 'JEKCA Animatch' };
+
+    let trackerLoaded = false;
+    let trackerAllData = [];
+    let trackerCurrentSite = '__all__';
+
+    function trSiteName(id) { return TR_SITE_NAMES[id] || id; }
+
+    function trFormatJST(utcStr) {
+      if (!utcStr) return '—';
+      return new Date(utcStr).toLocaleString('ja-JP', {
+        timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    }
+
+    function trIsBot(r) {
+      if (r.company_type === 'hosting') return true;
+      if ([15169, 32934, 8075, 20940, 14618].includes(Number(r.asn))) return true;
+      if (/bot|crawler|spider/i.test(r.ua || '')) return true;
+      if ((r.ua || '').includes('Nexus 5X Build/MMB29P')) return true;
+      return false;
+    }
+
+    function trBotBadge(r) {
+      return trIsBot(r)
+        ? '<span class="badge badge-bot">🤖 ボット</span>'
+        : '<span class="badge badge-human">👤 人間</span>';
+    }
+
+    function trCompanyTypeBadge(type) {
+      if (!type) return '<span style="color:#ccc">—</span>';
+      const cls = { hosting: 'badge-hosting', isp: 'badge-isp', business: 'badge-business' }[type] || '';
+      return `<span class="badge ${cls}">${type}</span>`;
+    }
+
+    function trTruncate(str, n = 40) {
+      if (!str) return '—';
+      return str.length > n ? str.slice(0, n) + '…' : str;
+    }
+
+    function trackerSetSite(siteId, btn) {
+      trackerCurrentSite = siteId;
+      document.querySelectorAll('#tracker-site-filter .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      trackerRender(trackerAllData);
+    }
+
+    function trackerRender(data) {
+      const filtered = trackerCurrentSite === '__all__'
+        ? data
+        : data.filter(r => r.site_id === trackerCurrentSite);
+
+      const sites    = [...new Set(data.map(r => r.site_id))];
+      const uniqueIPs = new Set(filtered.map(r => r.ip)).size;
+      const bots     = filtered.filter(trIsBot).length;
+
+      document.getElementById('tr-total').textContent  = filtered.length;
+      document.getElementById('tr-unique').textContent = uniqueIPs;
+      document.getElementById('tr-bots').textContent   = bots;
+      document.getElementById('tr-humans').textContent = filtered.length - bots;
+      document.getElementById('tr-sites').textContent  = sites.length;
+
+      // サマリーテーブル（全体時のみ）
+      const summarySection = document.getElementById('tr-summary-section');
+      if (trackerCurrentSite === '__all__') {
+        summarySection.style.display = 'block';
+        document.getElementById('tr-table-title').textContent = '📋 訪問履歴（最新50件）';
+        document.getElementById('tr-summary-body').innerHTML = sites.map(sid => {
+          const rows = data.filter(r => r.site_id === sid);
+          const uIP  = new Set(rows.map(r => r.ip)).size;
+          const b    = rows.filter(trIsBot).length;
+          return `<tr style="cursor:pointer;" onclick="document.querySelector('[onclick*=\\'trackerSetSite(\\\\\"${sid}\\\\\"\\']]').click()">
+            <td style="color:#667eea;font-weight:600;">${trSiteName(sid)}</td>
+            <td>${rows.length}</td><td>${uIP}</td>
+            <td style="color:#c62828;">${b}</td>
+            <td style="color:#388e3c;">${rows.length - b}</td>
+            <td style="color:#999;font-size:12px;">${trFormatJST(rows[0]?.at)}</td>
+          </tr>`;
+        }).join('');
+      } else {
+        summarySection.style.display = 'none';
+        document.getElementById('tr-table-title').textContent = `📋 ${trSiteName(trackerCurrentSite)} — 訪問履歴（${filtered.length}件）`;
+      }
+
+      // 訪問履歴テーブル
+      document.getElementById('tr-visits-body').innerHTML = filtered.slice(0, 50).map(r => `
+        <tr>
+          <td style="white-space:nowrap;font-size:12px;">${trFormatJST(r.at)}</td>
+          <td style="font-size:12px;font-weight:600;">${trSiteName(r.site_id)}</td>
+          <td style="font-family:monospace;font-size:12px;">${r.ip}</td>
+          <td>${r.country || '—'}</td>
+          <td style="font-size:12px;">${r.company_name || r.org || '—'}</td>
+          <td>${trBotBadge(r)}</td>
+          <td style="font-size:11px;color:#999;">${trTruncate(r.referrer, 28)}</td>
+          <td style="font-size:11px;color:#999;">${trTruncate(r.page_url, 35)}</td>
+        </tr>`).join('');
+    }
+
+    async function trackerLoad() {
+      document.getElementById('tracker-loading').style.display   = 'block';
+      document.getElementById('tracker-dashboard').style.display = 'none';
+      document.getElementById('tracker-error').style.display     = 'none';
+
+      try {
+        const res = await fetch(`${TR_URL}/rest/v1/visits?select=*&order=at.desc`, {
+          headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        trackerAllData = await res.json();
+      } catch (e) {
+        document.getElementById('tracker-loading').style.display = 'none';
+        const errEl = document.getElementById('tracker-error');
+        errEl.textContent = 'エラー: ' + e.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // サイトフィルターボタンを動的追加
+      const sites = [...new Set(trackerAllData.map(r => r.site_id))];
+      const filterEl = document.getElementById('tracker-site-filter');
+      filterEl.querySelectorAll('[data-site]').forEach(el => el.remove());
+      sites.forEach(sid => {
+        if (!filterEl.querySelector(`[data-site="${sid}"]`)) {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.textContent = trSiteName(sid);
+          btn.setAttribute('data-site', sid);
+          btn.setAttribute('onclick', `trackerSetSite('${sid}', this)`);
+          btn.onclick = function() { trackerSetSite(sid, this); };
+          filterEl.appendChild(btn);
+        }
+      });
+
+      trackerRender(trackerAllData);
+      document.getElementById('tracker-loading').style.display   = 'none';
+      document.getElementById('tracker-dashboard').style.display = 'block';
+      document.getElementById('tracker-last-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
+      trackerLoaded = true;
+    }
+
+    setInterval(() => {
+      if (document.getElementById('tab-tracker').classList.contains('active')) trackerLoad();
+    }, 60000);
   </script>
 </body>
 </html>
+
