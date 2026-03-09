@@ -382,6 +382,29 @@
     .badge-hosting { background: #fff3e0; color: #f57c00; }
     .badge-isp     { background: #e3f2fd; color: #1565c0; }
     .badge-business{ background: #f3e5f5; color: #7b1fa2; }
+
+    /* iframe タブ */
+    .iframe-tab-wrap {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      height: calc(100vh - 180px);
+      min-height: 600px;
+    }
+    .iframe-tab-wrap iframe {
+      width: 100%; height: 100%; border: none; display: block;
+    }
+    .iframe-offline-notice {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      color: #999;
+    }
+    .iframe-offline-notice h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
+    .iframe-offline-notice code { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -401,6 +424,8 @@
       <button class="tab-btn" onclick="switchTab('slides', this)">🍌 スライド生成</button>
       <button class="tab-btn" onclick="switchTab('sales', this)">📨 Sales AI</button>
       <button class="tab-btn" onclick="switchTab('tracker', this)">🌐 IP トラッカー</button>
+      <button class="tab-btn" onclick="switchTab('ga4', this)">📊 GA4</button>
+      <button class="tab-btn" onclick="switchTab('forest', this)">🌿 Forest Church</button>
     </div>
 
     <!-- ========== TAB: Text Converter ========== -->
@@ -736,6 +761,26 @@
       </div>
     </div><!-- /tab-tracker -->
 
+    <!-- ========== TAB: GA4 ========== -->
+    <div id="tab-ga4" class="tab-panel">
+      <div id="ga4-offline" class="iframe-offline-notice" style="display:none;">
+        <h3>⚠️ GA4ダッシュボードに接続できません</h3>
+        <p style="margin-top:8px;">ローカルサーバーが起動しているか確認してください。</p>
+        <p style="margin-top:8px;"><code>cd ~/ZEAMI/Zeami-obsidian/ga4-dashboard && npm run dev</code></p>
+        <button class="refresh-btn" style="margin-top:16px;" onclick="ga4Reload()">🔄 再接続</button>
+      </div>
+      <div id="ga4-frame-wrap" class="iframe-tab-wrap" style="display:none;">
+        <iframe id="ga4-iframe" src="" onload="ga4OnLoad()" onerror="ga4OnError()"></iframe>
+      </div>
+    </div><!-- /tab-ga4 -->
+
+    <!-- ========== TAB: Forest Church ========== -->
+    <div id="tab-forest" class="tab-panel">
+      <div class="iframe-tab-wrap">
+        <iframe src="./forest_church_dashboard_v2.html"></iframe>
+      </div>
+    </div><!-- /tab-forest -->
+
   </div><!-- /container -->
 
   <script>
@@ -748,6 +793,36 @@
       if (name === 'sales'   && !salesLoaded)   salesLoad();
       if (name === 'slides'  && !slidesLoaded)  loadSlideStats();
       if (name === 'tracker' && !trackerLoaded) trackerLoad();
+      if (name === 'ga4'     && !ga4Loaded)     ga4Load();
+    }
+
+    // ========== GA4 ==========
+    let ga4Loaded = false;
+    const GA4_URL = 'http://localhost:3000';
+
+    function ga4Load() {
+      const iframe = document.getElementById('ga4-iframe');
+      iframe.src = GA4_URL;
+      // onerror は iframe では発火しないので、タイムアウトで判定
+      const wrap = document.getElementById('ga4-frame-wrap');
+      const offline = document.getElementById('ga4-offline');
+      wrap.style.display = 'block';
+      offline.style.display = 'none';
+      ga4Loaded = true;
+    }
+    function ga4OnLoad() {
+      try {
+        // 正常ロード確認（同オリジンでないのでエラーになる = 正常）
+        document.getElementById('ga4-iframe').contentWindow.location.href;
+      } catch(e) { /* cross-origin = サーバー稼働中 */ }
+    }
+    function ga4OnError() {
+      document.getElementById('ga4-frame-wrap').style.display  = 'none';
+      document.getElementById('ga4-offline').style.display = 'block';
+    }
+    function ga4Reload() {
+      ga4Loaded = false;
+      ga4Load();
     }
 
     let slidesLoaded = false;
