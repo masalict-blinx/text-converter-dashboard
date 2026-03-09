@@ -763,14 +763,20 @@
 
     <!-- ========== TAB: GA4 ========== -->
     <div id="tab-ga4" class="tab-panel">
-      <div id="ga4-offline" class="iframe-offline-notice" style="display:none;">
-        <h3>⚠️ GA4ダッシュボードに接続できません</h3>
-        <p style="margin-top:8px;">ローカルサーバーが起動しているか確認してください。</p>
-        <p style="margin-top:8px;"><code>cd ~/ZEAMI/Zeami-obsidian/ga4-dashboard && npm run dev</code></p>
-        <button class="refresh-btn" style="margin-top:16px;" onclick="ga4Reload()">🔄 再接続</button>
-      </div>
-      <div id="ga4-frame-wrap" class="iframe-tab-wrap" style="display:none;">
-        <iframe id="ga4-iframe" src="" onload="ga4OnLoad()" onerror="ga4OnError()"></iframe>
+      <div class="iframe-offline-notice">
+        <div style="font-size:48px;margin-bottom:16px;">📊</div>
+        <h3>GA4 Analytics ダッシュボード</h3>
+        <p style="margin-top:12px;color:#777;">このダッシュボードはローカルで動作します。<br>ブラウザのセキュリティ制限により、GitHub PagesからHTTPローカルサーバーへのiframe表示はできません。</p>
+        <div style="margin-top:24px;background:#f8f9fa;border-radius:8px;padding:16px;text-align:left;display:inline-block;">
+          <p style="font-size:13px;color:#555;margin-bottom:8px;">① ターミナルで起動：</p>
+          <code style="display:block;background:#1a1a2e;color:#94a3b8;padding:10px 16px;border-radius:6px;font-size:13px;">cd ~/ZEAMI/Zeami-obsidian/ga4-dashboard && npm run dev</code>
+          <p style="font-size:13px;color:#555;margin:12px 0 8px;">② 以下のボタンで開く：</p>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="http://localhost:3000" target="_blank" rel="noopener">
+            <button class="refresh-btn" style="font-size:15px;padding:12px 32px;">🚀 GA4ダッシュボードを開く（localhost:3000）</button>
+          </a>
+        </div>
       </div>
     </div><!-- /tab-ga4 -->
 
@@ -793,37 +799,8 @@
       if (name === 'sales'   && !salesLoaded)   salesLoad();
       if (name === 'slides'  && !slidesLoaded)  loadSlideStats();
       if (name === 'tracker' && !trackerLoaded) trackerLoad();
-      if (name === 'ga4'     && !ga4Loaded)     ga4Load();
     }
 
-    // ========== GA4 ==========
-    let ga4Loaded = false;
-    const GA4_URL = 'http://localhost:3000';
-
-    function ga4Load() {
-      const iframe = document.getElementById('ga4-iframe');
-      iframe.src = GA4_URL;
-      // onerror は iframe では発火しないので、タイムアウトで判定
-      const wrap = document.getElementById('ga4-frame-wrap');
-      const offline = document.getElementById('ga4-offline');
-      wrap.style.display = 'block';
-      offline.style.display = 'none';
-      ga4Loaded = true;
-    }
-    function ga4OnLoad() {
-      try {
-        // 正常ロード確認（同オリジンでないのでエラーになる = 正常）
-        document.getElementById('ga4-iframe').contentWindow.location.href;
-      } catch(e) { /* cross-origin = サーバー稼働中 */ }
-    }
-    function ga4OnError() {
-      document.getElementById('ga4-frame-wrap').style.display  = 'none';
-      document.getElementById('ga4-offline').style.display = 'block';
-    }
-    function ga4Reload() {
-      ga4Loaded = false;
-      ga4Load();
-    }
 
     let slidesLoaded = false;
     let slideCharts = {};
