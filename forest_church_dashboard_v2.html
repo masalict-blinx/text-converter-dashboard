@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Forest Church - Instagram Analytics Hub</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600;700&family=Noto+Serif+Display:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Forest Church Brand Colors (from forestchurch.jp/css/styles.css) */
+      --fc-green:       #408070;   /* primary link/accent */
+      --fc-teal:        #459999;   /* KV background, borders */
+      --fc-teal-light:  #7ebcbc;   /* plan borders, hover */
+      --fc-teal-pale:   #b8d9d0;   /* thumbnails, soft fill */
+      --fc-brown:       #8c724d;   /* pricing, current nav */
+      --fc-beige:       #e1d4c6;   /* KV warm background */
+      --fc-body:        #4d4d4d;   /* main text */
+
+      /* Dashboard dark theme built from brand colors */
+      --bg-deep:        #0c1e18;   /* darkest bg */
+      --bg-dark:        #112820;   /* card bg */
+      --bg-card:        rgba(64,128,112,0.10);
+      --bg-card-hover:  rgba(64,128,112,0.18);
+      --border:         rgba(126,188,188,0.20);
+      --border-strong:  rgba(126,188,188,0.40);
+
+      /* Text */
+      --text-primary:   #e8f0ec;
+      --text-mid:       #a8c8bc;
+      --text-faint:     #648c80;
+
+      /* Accent layers */
+      --gold:           #c4a66a;   /* warm highlight, close to fc-brown */
+      --gold-light:     #ddc898;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Noto Serif JP', '游明朝体', 'Yu Mincho', serif;
+      background: var(--bg-deep);
+      min-height: 100vh;
+      color: var(--text-primary);
+      display: flex;
+    }
+
+    /* ══════════════════════════════
+       SIDEBAR
+    ══════════════════════════════ */
+    .sidebar {
+      width: 230px;
+      min-height: 100vh;
+      background: rgba(0,0,0,0.45);
+      border-right: 1px solid var(--border);
+      padding: 0 0 30px;
+      position: fixed;
+      top: 0; left: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    /* Logo area */
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      background: rgba(0,0,0,0.2);
+    }
+    .sidebar-logo img {
+      width: 160px;
+      filter: brightness(0) invert(1) opacity(0.85);
+      display: block;
+      margin-bottom: 8px;
+    }
+    .sidebar-logo .sub {
+      font-size: 0.65rem;
+      color: var(--fc-teal-light);
+      letter-spacing: 0.15em;
+      font-family: 'Noto Serif Display', serif;
+    }
+
+    /* Month selector */
+    .month-toggle {
+      margin: 4px 14px 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+    }
+    .month-toggle p {
+      font-size: 0.65rem;
+      color: var(--text-mid);
+      margin-bottom: 7px;
+      letter-spacing: 0.1em;
+    }
+    .toggle-btns { display: flex; gap: 4px; }
+    .toggle-btn {
+      flex: 1;
+      padding: 6px 2px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-mid);
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: 'Noto Serif JP', serif;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: var(--fc-green);
+      color: #fff;
+      border-color: var(--fc-green);
+    }
+
+    /* Nav items */
+    .nav-section {
+      font-size: 0.6rem;
+      color: var(--fc-teal);
+      letter-spacing: 0.18em;
+      padding: 12px 18px 3px;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 18px;
+      cursor: pointer;
+      border-radius: 0 20px 20px 0;
+      margin-right: 10px;
+      font-size: 0.84rem;
+      color: var(--text-mid);
+      transition: all 0.2s;
+      font-weight: 400;
+    }
+    .nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(64,128,112,0.3), rgba(64,128,112,0.1));
+      color: var(--fc-teal-light);
+      border-right: 2px solid var(--fc-teal-light);
+    }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .nav-label { flex: 1; }
+    .nav-badge {
+      background: rgba(126,188,188,0.2);
+      color: var(--fc-teal-light);
+      font-size: 0.6rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    /* ══════════════════════════════
+       MAIN
+    ══════════════════════════════ */
+    .main {
+      margin-left: 230px;
+      flex: 1;
+      padding: 36px 44px;
+      max-width: calc(100vw - 230px);
+    }
+
+    /* Page header */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header h1 {
+      font-family: 'Noto Serif Display', serif;
+      font-size: 1.75rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--text-primary);
+    }
+    .page-header h1 em {
+      font-style: italic;
+      color: var(--fc-teal-light);
+    }
+    .page-header p { color: var(--text-mid); font-size: 0.82rem; margin-top: 5px; letter-spacing: 0.05em; }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(64,128,112,0.15);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      color: var(--fc-teal-light);
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--fc-teal-light);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ══════════════════════════════
+       KPI GRID
+    ══════════════════════════════ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .kpi-card.c-green::after  { background: linear-gradient(90deg, var(--fc-green), var(--fc-teal-light)); }
+    .kpi-card.c-teal::after   { background: linear-gradient(90deg, var(--fc-teal), var(--fc-teal-pale)); }
+    .kpi-card.c-brown::after  { background: linear-gradient(90deg, var(--fc-brown), var(--gold-light)); }
+    .kpi-card.c-pale::after   { background: linear-gradient(90deg, var(--fc-teal-pale), #fff); }
+    .kpi-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+
+    .kpi-icon { font-size: 1.4rem; margin-bottom: 8px; opacity: 0.85; }
+    .kpi-value {
+      font-family: 'Noto Serif Display', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+    .kpi-label { font-size: 0.72rem; color: var(--text-mid); margin-top: 5px; letter-spacing: 0.06em; }
+    .kpi-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.72rem;
+      margin-top: 7px;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .kpi-change.up   { background: rgba(64,128,112,0.2); color: var(--fc-teal-light); }
+    .kpi-change.neu  { background: rgba(255,255,255,0.07); color: var(--text-mid); }
+    .kpi-change.down { background: rgba(180,90,70,0.2); color: #d4927a; }
+
+    /* ══════════════════════════════
+       CARDS
+    ══════════════════════════════ */
+    .row { display: grid; gap: 18px; margin-bottom: 18px; }
+    .row.col2   { grid-template-columns: 1fr 1fr; }
+    .row.col3   { grid-template-columns: 1fr 1fr 1fr; }
+    .row.col13  { grid-template-columns: 1fr 2.4fr; }
+    .row.col31  { grid-template-columns: 2.4fr 1fr; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 24px;
+    }
+    .card-title {
+      font-family: 'Noto Serif Display', serif;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--fc-teal-light);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .ct-icon { font-size: 1.1rem; opacity: 0.8; }
+    .chart-wrap          { position: relative; height: 240px; }
+    .chart-wrap.sm       { height: 180px; }
+    .chart-wrap.lg       { height: 300px; }
+
+    /* ══════════════════════════════
+       PROGRESS BARS
+    ══════════════════════════════ */
+    .pbar { margin-bottom: 11px; }
+    .pbar-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--text-mid);
+    }
+    .pbar-head .v { color: var(--fc-teal-light); font-weight: 600; }
+    .pbar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .pbar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    .fill-g  { background: linear-gradient(90deg, var(--fc-green), var(--fc-teal-light)); }
+    .fill-t  { background: linear-gradient(90deg, var(--fc-teal), var(--fc-teal-pale)); }
+    .fill-b  { background: linear-gradient(90deg, var(--fc-brown), var(--gold-light)); }
+    .fill-p  { background: linear-gradient(90deg, #6a8ca0, #98bcd0); }
+
+    /* ══════════════════════════════
+       TABLE
+    ══════════════════════════════ */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th {
+      background: rgba(126,188,188,0.12);
+      color: var(--fc-teal-light);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .tbl td {
+      padding: 10px 12px;
+      font-size: 0.83rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-primary);
+    }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(64,128,112,0.08); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .badge.paid    { background: rgba(140,114,77,0.3); color: var(--gold-light); border: 1px solid rgba(140,114,77,0.4); }
+    .badge.organic { background: rgba(64,128,112,0.25); color: var(--fc-teal-light); border: 1px solid rgba(126,188,188,0.3); }
+    .badge.self    { background: rgba(255,255,255,0.08); color: var(--text-mid); }
+
+    /* ══════════════════════════════
+       FUNNEL
+    ══════════════════════════════ */
+    .funnel { display: flex; flex-direction: column; gap: 5px; }
+    .f-step { display: flex; align-items: center; gap: 10px; }
+    .f-label { width: 120px; font-size: 0.75rem; color: var(--text-mid); text-align: right; flex-shrink: 0; }
+    .f-bar { flex: 1; height: 32px; background: rgba(255,255,255,0.04); border-radius: 5px; overflow: hidden; }
+    .f-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: 0.78rem;
+      color: #fff;
+      font-family: 'Noto Serif Display', serif;
+    }
+    .f-val { width: 90px; font-size: 0.82rem; color: var(--fc-teal-light); text-align: right; flex-shrink: 0; font-weight: 600; }
+    .f-arrow { color: var(--fc-teal); font-size: 0.7rem; padding-left: 134px; margin: -2px 0; }
+
+    /* ══════════════════════════════
+       KOL CARDS
+    ══════════════════════════════ */
+    .kol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kol-card {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      transition: all 0.2s;
+    }
+    .kol-card:hover { border-color: var(--fc-teal-light); }
+    .kol-rank {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .kol-rank.paid-r    { background: linear-gradient(135deg, var(--fc-brown), var(--gold-light)); color: #fff; }
+    .kol-rank.organic-r { background: linear-gradient(135deg, var(--fc-green), var(--fc-teal-light)); color: #fff; }
+    .kol-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+    .kol-handle { font-size: 0.7rem; color: var(--text-mid); }
+    .kol-stats { display: flex; gap: 8px; margin-top: 5px; }
+    .kol-stat { font-size: 0.7rem; }
+    .kol-stat strong { color: var(--fc-teal-light); }
+    .kol-stat span   { color: var(--text-mid); }
+
+    /* ══════════════════════════════
+       WATERFALL
+    ══════════════════════════════ */
+    .wf { display: flex; flex-direction: column; gap: 7px; }
+    .wf-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: 9px;
+      font-size: 0.83rem;
+    }
+    .wf-row.base  { background: rgba(64,128,112,0.12); }
+    .wf-row.plus  { background: rgba(64,128,112,0.18); }
+    .wf-row.minus { background: rgba(180,90,70,0.12); }
+    .wf-row.total { background: rgba(126,188,188,0.12); border: 1px solid var(--border-strong); }
+    .wf-icon { width: 18px; text-align: center; }
+    .wf-label { flex: 1; color: var(--text-mid); }
+    .wf-val { font-weight: 700; font-family: 'Noto Serif Display', serif; }
+    .wf-val.pos { color: var(--fc-teal-light); }
+    .wf-val.neg { color: #d4927a; }
+    .wf-val.tot { color: var(--text-primary); font-size: 1rem; }
+
+    /* ══════════════════════════════
+       INSIGHT CHIPS
+    ══════════════════════════════ */
+    .ic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ic {
+      background: rgba(64,128,112,0.1);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 13px;
+    }
+    .ic-icon { font-size: 1.1rem; margin-bottom: 4px; }
+    .ic-val  { font-family: 'Noto Serif Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--fc-teal-light); }
+    .ic-txt  { font-size: 0.77rem; color: var(--text-mid); line-height: 1.5; margin-top: 3px; }
+
+    /* ══════════════════════════════
+       CROSS / ROI
+    ══════════════════════════════ */
+    .roi-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .roi-row:last-child { border-bottom: none; }
+    .roi-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+    .roi-name { flex: 1; font-size: 0.82rem; color: var(--text-mid); }
+    .roi-val  { font-size: 0.82rem; color: var(--fc-teal-light); font-weight: 700; width: 80px; text-align: right; }
+    .roi-bar-w { width: 90px; }
+    .roi-bar { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+    .roi-bar-f { height: 100%; border-radius: 3px; }
+
+    .cross-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .cm-cell {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .cm-label { font-size: 0.68rem; color: var(--text-mid); margin-bottom: 7px; line-height: 1.5; }
+    .cm-val { font-family: 'Noto Serif Display', serif; font-size: 1.5rem; color: var(--text-primary); font-weight: 600; }
+    .cm-sub { font-size: 0.68rem; color: var(--text-mid); margin-top: 4px; }
+
+    /* Note */
+    .note {
+      background: rgba(140,114,77,0.1);
+      border: 1px dashed rgba(140,114,77,0.35);
+      border-radius: 9px;
+      padding: 9px 13px;
+      font-size: 0.75rem;
+      color: var(--gold-light);
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    /* Overlap text */
+    .overlap-text {
+      font-size: 0.83rem;
+      color: var(--text-mid);
+      line-height: 2;
+    }
+    .overlap-text p { padding: 4px 0; }
+    .overlap-text .arrow { color: var(--fc-teal-light); font-size: 0.78rem; padding-left: 14px; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 30px 0 8px;
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      letter-spacing: 0.06em;
+      border-top: 1px solid var(--border);
+      margin-top: 30px;
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .row.col3  { grid-template-columns: 1fr 1fr; }
+      .row.col13 { grid-template-columns: 1fr; }
+      .row.col31 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://forestchurch.jp/img/common/logo.png" alt="森の教会">
+    <span class="sub">Instagram Analytics Hub</span>
+  </div>
+
+  <div class="month-toggle">
+    <p>表示期間</p>
+    <div class="toggle-btns">
+      <button class="toggle-btn" onclick="setMonth(this)">1月</button>
+      <button class="toggle-btn active" onclick="setMonth(this)">2月</button>
+      <button class="toggle-btn" onclick="setMonth(this)">比較</button>
+    </div>
+  </div>
+
+  <span class="nav-section">Overview</span>
+  <div class="nav-item active" onclick="showTab('overview', this)">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">全体サマリー</span>
+  </div>
+
+  <span class="nav-section">4 Agents</span>
+  <div class="nav-item" onclick="showTab('followers', this)">
+    <span class="nav-icon">👥</span>
+    <span class="nav-label">フォロワー分析</span>
+    <span class="nav-badge">A1</span>
+  </div>
+  <div class="nav-item" onclick="showTab('hashtag', this)">
+    <span class="nav-icon">#️⃣</span>
+    <span class="nav-label">ハッシュタグ</span>
+    <span class="nav-badge">A2</span>
+  </div>
+  <div class="nav-item" onclick="showTab('paid', this)">
+    <span class="nav-icon">💴</span>
+    <span class="nav-label">Paid KOL 3名</span>
+    <span class="nav-badge">A3</span>
+  </div>
+  <div class="nav-item" onclick="showTab('organic', this)">
+    <span class="nav-icon">🌿</span>
+    <span class="nav-label">オーガニック KOL</span>
+    <span class="nav-badge">A4</span>
+  </div>
+
+  <span class="nav-section">Analysis</span>
+  <div class="nav-item" onclick="showTab('cross', this)">
+    <span class="nav-icon">🔀</span>
+    <span class="nav-label">クロス分析</span>
+  </div>
+
+  <div class="nav-item" onclick="showTab('organic-ext', this)">
+    <span class="nav-icon">⭐</span>
+    <span class="nav-label">オーガニックKOL<br><span style="font-size:0.68rem;opacity:0.7">ハッシュタグ外</span></span>
+    <span class="nav-badge">A5</span>
+  </div>
+
+  <span class="nav-section">Appendix</span>
+  <div class="nav-item" onclick="showTab('reference', this)">
+    <span class="nav-icon">📖</span>
+    <span class="nav-label">参考資料</span>
+  </div>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <h1 id="page-title">全体 <em>サマリー</em></h1>
+      <p id="page-sub">キャンドルナイト施策 — Instagram 全チャネル統合分析</p>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      2026年2月データ取得待ち（モックアップ）
+    </div>
+  </div>
+
+  <!-- ════════════════════
+       TAB: OVERVIEW
+  ════════════════════ -->
+  <div id="tab-overview" class="tab-content active">
+
+    <div class="kpi-grid">
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-value">5,968</div>
+        <div class="kpi-label">総フォロワー数（1月末）</div>
+        <div class="kpi-change neu">2月取得後に更新</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">#️⃣</div>
+        <div class="kpi-value">11+</div>
+        <div class="kpi-label">ハッシュタグ投稿数</div>
+        <div class="kpi-change up">↑ 2月追加分</div>
+      </div>
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">📡</div>
+        <div class="kpi-value">56万</div>
+        <div class="kpi-label">Paid KOL 合算リーチ</div>
+        <div class="kpi-change neu">3名合計フォロワー</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">🌿</div>
+        <div class="kpi-value">902</div>
+        <div class="kpi-label">オーガニック KOL 最大いいね</div>
+        <div class="kpi-change up">@ichijikupai · ¥0</div>
+      </div>
+    </div>
+
+    <div class="row col13">
+      <!-- Channel efficiency -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📊</span>チャネル別 エンゲージメント効率</div>
+        <div class="pbar">
+          <div class="pbar-head"><span>🌿 オーガニックKOL（いちじくパイ）</span><span class="v">902 likes · Eng — %</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-g" style="width:100%"></div></div>
+        </div>
+        <div class="pbar">
+          <div class="pbar-head"><span>🌿 オーガニックKOL（@sky_love）</span><span class="v">183 likes · Eng — %</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-g" style="width:54%"></div></div>
+        </div>
+        <div class="pbar">
+          <div class="pbar-head"><span>🌿 オーガニックKOL（@koji50207）</span><span class="v">117 likes · Eng — %</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-g" style="width:38%"></div></div>
+        </div>
+        <div class="pbar" style="margin-top:10px">
+          <div class="pbar-head"><span>💴 Paid KOL（ほくろ 17万）</span><span class="v">Eng Rate 取得後</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-b" style="width:55%"></div></div>
+        </div>
+        <div class="pbar">
+          <div class="pbar-head"><span>💴 Paid KOL（九州メモ 9万）</span><span class="v">Eng Rate 取得後</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-b" style="width:42%"></div></div>
+        </div>
+        <div class="pbar">
+          <div class="pbar-head"><span>💴 Paid KOL（大近マップ 30万）</span><span class="v">Eng Rate 取得後</span></div>
+          <div class="pbar-track"><div class="pbar-fill fill-b" style="width:68%"></div></div>
+        </div>
+        <div class="note">⚠️ オーガニックKOLのフォロワー数は Agent #4 取得後に Eng Rate 自動算出</div>
+      </div>
+
+      <!-- Funnel -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🔽</span>来場者転換ファネル（推計）</div>
+        <div class="funnel">
+          <div class="f-step">
+            <div class="f-label">KOL 投稿リーチ</div>
+            <div class="f-bar"><div class="f-fill" style="width:100%;background:linear-gradient(90deg,#408070,#7ebcbc)">約 56万人</div></div>
+            <div class="f-val">560,000</div>
+          </div>
+          <div class="f-arrow">↓ ~0.1%</div>
+          <div class="f-step">
+            <div class="f-label">いいね / 保存</div>
+            <div class="f-bar"><div class="f-fill" style="width:38%;background:linear-gradient(90deg,#459999,#b8d9d0)">1,311+</div></div>
+            <div class="f-val">1,311+</div>
+          </div>
+          <div class="f-arrow">↓</div>
+          <div class="f-step">
+            <div class="f-label">アカウント流入</div>
+            <div class="f-bar"><div class="f-fill" style="width:18%;background:linear-gradient(90deg,#8c724d,#c4a66a)">推計</div></div>
+            <div class="f-val">計測予定</div>
+          </div>
+          <div class="f-arrow">↓</div>
+          <div class="f-step">
+            <div class="f-label">新規フォロワー</div>
+            <div class="f-bar"><div class="f-fill" style="width:10%;background:linear-gradient(90deg,#4d7060,#7ebcbc)">2月</div></div>
+            <div class="f-val">2月取得後</div>
+          </div>
+          <div class="f-arrow">↓</div>
+          <div class="f-step">
+            <div class="f-label">実来場</div>
+            <div class="f-bar"><div class="f-fill" style="width:5%;background:var(--fc-green)">来場</div></div>
+            <div class="f-val">80〜90名/日</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📈</span>月別 ハッシュタグ投稿数 + エンゲージメント</div>
+        <div class="chart-wrap"><canvas id="overviewTrend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🥧</span>投稿者カテゴリ内訳</div>
+        <div class="chart-wrap"><canvas id="overviewPie"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /overview -->
+
+
+  <!-- ════════════════════
+       TAB: FOLLOWERS (A1)
+  ════════════════════ -->
+  <div id="tab-followers" class="tab-content">
+
+    <div class="kpi-grid">
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">📌</div>
+        <div class="kpi-value">5,968</div>
+        <div class="kpi-label">1月末フォロワー数</div>
+        <div class="kpi-change neu">基準値</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">✨</div>
+        <div class="kpi-value">+???</div>
+        <div class="kpi-label">2月新規フォロワー</div>
+        <div class="kpi-change neu">取得後確定</div>
+      </div>
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">😴</div>
+        <div class="kpi-value">45%</div>
+        <div class="kpi-label">休眠アカウント率</div>
+        <div class="kpi-change neu">1月実績</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">📍</div>
+        <div class="kpi-value">22%</div>
+        <div class="kpi-label">熊本フォロワー率</div>
+        <div class="kpi-change up">地域密着度 高</div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">↕️</span>フォロワー増減（1月→2月）</div>
+        <div class="wf">
+          <div class="wf-row base">
+            <span class="wf-icon">📌</span>
+            <span class="wf-label">1月末フォロワー数</span>
+            <span class="wf-val tot">5,968</span>
+          </div>
+          <div class="wf-row plus">
+            <span class="wf-icon">＋</span>
+            <span class="wf-label">新規フォロワー（2月）</span>
+            <span class="wf-val pos">+???</span>
+          </div>
+          <div class="wf-row minus">
+            <span class="wf-icon">－</span>
+            <span class="wf-label">フォロワー解除（2月）</span>
+            <span class="wf-val neg">-???</span>
+          </div>
+          <div class="wf-row total">
+            <span class="wf-icon">🎯</span>
+            <span class="wf-label">2月末フォロワー数</span>
+            <span class="wf-val tot">????</span>
+          </div>
+        </div>
+        <div class="note">⚠️ 2月フォロワーリスト取得後、1月との差分で自動計算</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">👥</span>コホート分布推移</div>
+        <div class="chart-wrap"><canvas id="followCohort"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🗺️</span>地域分布（1月実績）</div>
+        <div class="chart-wrap sm"><canvas id="followRegion"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🏢</span>TOP10 ビジネスカテゴリ</div>
+        <div class="pbar"><div class="pbar-head"><span>Product/Service</span><span class="v">144</span></div><div class="pbar-track"><div class="pbar-fill fill-g" style="width:100%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Personal Blog</span><span class="v">139</span></div><div class="pbar-track"><div class="pbar-fill fill-g" style="width:97%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Health/Beauty</span><span class="v">108</span></div><div class="pbar-track"><div class="pbar-fill fill-g" style="width:75%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Restaurant</span><span class="v">71</span></div><div class="pbar-track"><div class="pbar-fill fill-t" style="width:49%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Artist</span><span class="v">67</span></div><div class="pbar-track"><div class="pbar-fill fill-t" style="width:47%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Photographer</span><span class="v">55</span></div><div class="pbar-track"><div class="pbar-fill fill-t" style="width:38%"></div></div></div>
+        <div class="pbar"><div class="pbar-head"><span>Shopping &amp; Retail</span><span class="v">63</span></div><div class="pbar-track"><div class="pbar-fill fill-t" style="width:44%"></div></div></div>
+      </div>
+    </div>
+  </div><!-- /followers -->
+
+
+  <!-- ════════════════════
+       TAB: HASHTAG (A2)
+  ════════════════════ -->
+  <div id="tab-hashtag" class="tab-content">
+
+    <div class="kpi-grid">
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">📝</div>
+        <div class="kpi-value">11</div>
+        <div class="kpi-label">総投稿数（1月）</div>
+        <div class="kpi-change neu">+2月分加算予定</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">🙋</div>
+        <div class="kpi-value">9</div>
+        <div class="kpi-label">ユニーク投稿者（1月）</div>
+        <div class="kpi-change up">+2月で追加</div>
+      </div>
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">❤️</div>
+        <div class="kpi-value">1,311</div>
+        <div class="kpi-label">総エンゲージメント</div>
+        <div class="kpi-change up">いいね + コメント</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-value">119.2</div>
+        <div class="kpi-label">平均 Eng / 投稿</div>
+        <div class="kpi-change up">業界平均の約 3倍</div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📋</span>投稿一覧（全期間）</div>
+        <table class="tbl">
+          <thead>
+            <tr><th>投稿者</th><th>投稿数</th><th>いいね計</th><th>コメント</th><th>種別</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>@ichijikupai</td><td>1</td><td style="color:var(--fc-teal-light);font-weight:700">902</td><td>7</td><td><span class="badge organic">オーガニックKOL</span></td></tr>
+            <tr><td>@sky_love_soramido_</td><td>2</td><td>174</td><td>9</td><td><span class="badge organic">オーガニックKOL</span></td></tr>
+            <tr><td>@koji50207</td><td>2</td><td>115</td><td>2</td><td><span class="badge organic">オーガニックKOL</span></td></tr>
+            <tr><td>@tomohiro_hidaka</td><td>1</td><td>39</td><td>0</td><td><span class="badge self">本人</span></td></tr>
+            <tr><td>@takahiro8066</td><td>1</td><td>37</td><td>0</td><td><span class="badge organic">オーガニックKOL</span></td></tr>
+            <tr><td>@mi.wa5029</td><td>1</td><td>10</td><td>0</td><td><span class="badge self">一般</span></td></tr>
+            <tr><td>@tam_kim_photon</td><td>1</td><td>7</td><td>0</td><td><span class="badge self">一般</span></td></tr>
+            <tr><td>@present_private</td><td>1</td><td>5</td><td>0</td><td><span class="badge self">一般</span></td></tr>
+            <tr><td>@nao.n.115</td><td>1</td><td>4</td><td>0</td><td><span class="badge self">一般</span></td></tr>
+            <tr style="opacity:0.5"><td colspan="5" style="text-align:center;font-size:0.75rem;color:var(--text-faint)">＋ 2月分データ取得後に追加</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📊</span>エンゲージメント分布</div>
+        <div class="chart-wrap"><canvas id="hashEng"></canvas></div>
+        <div class="ic-grid" style="margin-top:14px">
+          <div class="ic"><div class="ic-icon">🏆</div><div class="ic-val">68.7%</div><div class="ic-txt">@ichijikupaiが全エンゲージを占有</div></div>
+          <div class="ic"><div class="ic-icon">📸</div><div class="ic-val">写真家層</div><div class="ic-txt">上位投稿者はカメラ・フォト系が中心</div></div>
+          <div class="ic"><div class="ic-icon">🌿</div><div class="ic-val">¥ 0</div><div class="ic-txt">上位KOLはすべてコストゼロで拡散</div></div>
+          <div class="ic"><div class="ic-icon">🗾</div><div class="ic-val">九州全域</div><div class="ic-txt">鹿児島・福岡など県外来場者が投稿</div></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /hashtag -->
+
+
+  <!-- ════════════════════
+       TAB: PAID KOL (A3)
+  ════════════════════ -->
+  <div id="tab-paid" class="tab-content">
+
+    <div class="kpi-grid">
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">💴</div>
+        <div class="kpi-value">40万円</div>
+        <div class="kpi-label">総投資額（最終）</div>
+        <div class="kpi-change neu">当初60万 → 減額</div>
+      </div>
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">📡</div>
+        <div class="kpi-value">56万</div>
+        <div class="kpi-label">合算フォロワー数</div>
+        <div class="kpi-change neu">3名合計</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">💱</div>
+        <div class="kpi-value">¥ 0.71</div>
+        <div class="kpi-label">フォロワー単価</div>
+        <div class="kpi-change up">業界標準 1.5〜3円 → 超割安</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-value">取得中</div>
+        <div class="kpi-label">実エンゲージメント</div>
+        <div class="kpi-change neu">投稿URL特定後確定</div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">💴</span>Paid KOL 3名 詳細比較</div>
+        <table class="tbl">
+          <thead>
+            <tr><th>#</th><th>KOL</th><th>フォロワー</th><th>いいね</th><th>Eng率</th><th>CPE</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><div style="font-weight:600">ほくろちゃん</div><div style="font-size:0.7rem;color:var(--text-mid)">@hokuro___</div></td>
+              <td>170,000</td>
+              <td style="color:var(--fc-teal-light)">取得後</td>
+              <td>取得後</td>
+              <td>取得後</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><div style="font-weight:600">九州メモ</div><div style="font-size:0.7rem;color:var(--text-mid)">@kyushunmemo</div></td>
+              <td>90,000</td>
+              <td style="color:var(--fc-teal-light)">取得後</td>
+              <td>取得後</td>
+              <td>取得後</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><div style="font-weight:600">おーちかマップ</div><div style="font-size:0.7rem;color:var(--text-mid)">@oochikamoto</div></td>
+              <td>300,000</td>
+              <td style="color:var(--fc-teal-light)">取得後</td>
+              <td>取得後</td>
+              <td>取得後</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:20px">
+          <div class="pbar"><div class="pbar-head"><span>今回（40万円 / 3名）</span><span class="v">¥ 0.71 / フォロワー</span></div><div class="pbar-track"><div class="pbar-fill fill-g" style="width:24%"></div></div></div>
+          <div class="pbar"><div class="pbar-head"><span>業界標準（安め）</span><span class="v">¥ 1.0 / フォロワー</span></div><div class="pbar-track"><div class="pbar-fill fill-t" style="width:34%"></div></div></div>
+          <div class="pbar"><div class="pbar-head"><span>業界標準（一般）</span><span class="v">¥ 1.5〜3.0 / フォロワー</span></div><div class="pbar-track"><div class="pbar-fill fill-b" style="width:80%"></div></div></div>
+          <div class="pbar"><div class="pbar-head"><span>新規業者（東京）</span><span class="v">¥ 2.0 / フォロワー</span></div><div class="pbar-track"><div class="pbar-fill fill-b" style="width:66%"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🥧</span>3名フォロワー規模</div>
+        <div class="chart-wrap"><canvas id="paidDoughnut"></canvas></div>
+        <div class="note">⚠️ 実エンゲージメントは apify/instagram-profile-scraper で各アカウントの投稿を特定後に自動入力</div>
+      </div>
+    </div>
+  </div><!-- /paid -->
+
+
+  <!-- ════════════════════
+       TAB: ORGANIC KOL (A4)
+  ════════════════════ -->
+  <div id="tab-organic" class="tab-content">
+
+    <div class="kpi-grid">
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">🌿</div>
+        <div class="kpi-value">5名+</div>
+        <div class="kpi-label">オーガニックKOL（確認済み）</div>
+        <div class="kpi-change up">2月で追加見込み</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">❤️</div>
+        <div class="kpi-value">1,232</div>
+        <div class="kpi-label">オーガニックKOL いいね計（1月）</div>
+        <div class="kpi-change up">@ichijikupai 902 含む</div>
+      </div>
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">💴</div>
+        <div class="kpi-value">¥ 0</div>
+        <div class="kpi-label">オーガニックKOLへの支出</div>
+        <div class="kpi-change up">ROI = ∞</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">🔍</div>
+        <div class="kpi-value">???</div>
+        <div class="kpi-label">@ichijikupai フォロワー数</div>
+        <div class="kpi-change neu">取得後にEng率算出</div>
+      </div>
+    </div>
+
+    <div class="row col13">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🌿</span>オーガニックKOL ランキング</div>
+        <div class="kol-grid">
+          <div class="kol-card">
+            <div class="kol-rank organic-r">1</div>
+            <div>
+              <div class="kol-name">いちじくパイ</div>
+              <div class="kol-handle">@ichijikupai</div>
+              <div class="kol-stats">
+                <span class="kol-stat"><strong>902</strong><span> likes</span></span>
+                <span class="kol-stat"><strong>7</strong><span> comments</span></span>
+                <span class="kol-stat"><strong>1</strong><span> post</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="kol-card">
+            <div class="kol-rank organic-r">2</div>
+            <div>
+              <div class="kol-name">sky_love</div>
+              <div class="kol-handle">@sky_love_soramido_</div>
+              <div class="kol-stats">
+                <span class="kol-stat"><strong>174</strong><span> likes</span></span>
+                <span class="kol-stat"><strong>9</strong><span> comments</span></span>
+                <span class="kol-stat"><strong>2</strong><span> posts</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="kol-card">
+            <div class="kol-rank organic-r">3</div>
+            <div>
+              <div class="kol-name">koji50207</div>
+              <div class="kol-handle">@koji50207</div>
+              <div class="kol-stats">
+                <span class="kol-stat"><strong>115</strong><span> likes</span></span>
+                <span class="kol-stat"><strong>2</strong><span> comments</span></span>
+                <span class="kol-stat"><strong>2</strong><span> posts</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="kol-card">
+            <div class="kol-rank organic-r">4</div>
+            <div>
+              <div class="kol-name">takahiro8066</div>
+              <div class="kol-handle">@takahiro8066</div>
+              <div class="kol-stats">
+                <span class="kol-stat"><strong>37</strong><span> likes</span></span>
+                <span class="kol-stat"><strong>0</strong><span> comments</span></span>
+                <span class="kol-stat"><strong>1</strong><span> post</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-title" style="margin-top:18px"><span class="ct-icon">⭐</span>アプローチ候補スコアリング</div>
+        <table class="tbl">
+          <thead><tr><th>アカウント</th><th>いいね計</th><th>フォロワー推計</th><th>推奨アクション</th></tr></thead>
+          <tbody>
+            <tr><td>@ichijikupai</td><td style="color:var(--fc-teal-light);font-weight:700">902</td><td>取得後</td><td style="color:var(--fc-teal-light)">🤝 優先コラボ対象</td></tr>
+            <tr><td>@sky_love_soramido_</td><td>183</td><td>取得後</td><td style="color:var(--fc-teal-light)">🤝 コラボ候補</td></tr>
+            <tr><td>@koji50207</td><td>117</td><td>取得後</td><td style="color:var(--text-mid)">👀 継続観察</td></tr>
+          </tbody>
+        </table>
+        <div class="note">⚠️ フォロワー数を取得後、Eng率 & アプローチ優先度を自動スコアリング</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">⚖️</span>オーガニック vs Paid 効率比較</div>
+        <div class="chart-wrap lg"><canvas id="orgVsPaid"></canvas></div>
+      </div>
+    </div>
+  </div><!-- /organic -->
+
+
+  <!-- ════════════════════
+       TAB: CROSS
+  ════════════════════ -->
+  <div id="tab-cross" class="tab-content">
+
+    <div class="cross-matrix" style="margin-bottom:18px">
+      <div class="cm-cell"><div class="cm-label">👥 Agent #1<br>フォロワー</div><div class="cm-val">5,968</div><div class="cm-sub">1月末 / 2月末：取得後</div></div>
+      <div class="cm-cell"><div class="cm-label">#️⃣ Agent #2<br>ハッシュタグ投稿</div><div class="cm-val">11+</div><div class="cm-sub">累計 / 2月分加算中</div></div>
+      <div class="cm-cell"><div class="cm-label">💴 Agent #3<br>Paid KOLリーチ</div><div class="cm-val">56万</div><div class="cm-sub">フォロワー合算</div></div>
+      <div class="cm-cell"><div class="cm-label">🌿 Agent #4<br>オーガニックKOL Eng</div><div class="cm-val">1,232</div><div class="cm-sub">いいね+コメント計</div></div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🕸️</span>4チャネル エンゲージメント効率レーダー</div>
+        <div class="chart-wrap lg"><canvas id="crossRadar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">💹</span>ROI 比較（コスト ÷ エンゲージメント）</div>
+        <div class="roi-row">
+          <span class="roi-icon">🌿</span>
+          <span class="roi-name">オーガニックKOL（いちじくパイ）</span>
+          <span class="roi-val">¥ 0 / eng</span>
+          <div class="roi-bar-w"><div class="roi-bar"><div class="roi-bar-f" style="width:100%;background:var(--fc-green)"></div></div></div>
+        </div>
+        <div class="roi-row">
+          <span class="roi-icon">🌿</span>
+          <span class="roi-name">オーガニックKOL（その他）</span>
+          <span class="roi-val">¥ 0 / eng</span>
+          <div class="roi-bar-w"><div class="roi-bar"><div class="roi-bar-f" style="width:100%;background:var(--fc-green)"></div></div></div>
+        </div>
+        <div class="roi-row">
+          <span class="roi-icon">💴</span>
+          <span class="roi-name">Paid KOL（九州メモ）</span>
+          <span class="roi-val">取得後</span>
+          <div class="roi-bar-w"><div class="roi-bar"><div class="roi-bar-f" style="width:50%;background:var(--fc-brown)"></div></div></div>
+        </div>
+        <div class="roi-row">
+          <span class="roi-icon">💴</span>
+          <span class="roi-name">Paid KOL（ほくろ）</span>
+          <span class="roi-val">取得後</span>
+          <div class="roi-bar-w"><div class="roi-bar"><div class="roi-bar-f" style="width:40%;background:var(--fc-brown)"></div></div></div>
+        </div>
+        <div class="roi-row">
+          <span class="roi-icon">💴</span>
+          <span class="roi-name">Paid KOL（大近マップ）</span>
+          <span class="roi-val">取得後</span>
+          <div class="roi-bar-w"><div class="roi-bar"><div class="roi-bar-f" style="width:30%;background:var(--fc-brown)"></div></div></div>
+        </div>
+        <div class="note">⚠️ Paid KOL投稿取得後に正確な CPE を自動算出</div>
+      </div>
+    </div>
+
+    <div class="row col2">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🔗</span>フォロワー × KOL オーバーラップ分析</div>
+        <div class="overlap-text">
+          <p>① ハッシュタグ投稿者は森の教会をフォロー済みか？</p>
+          <p class="arrow">→ フォロワーリスト × 投稿者リストで照合</p>
+          <p>② Paid KOLのフォロワーが新規フォローしたか？</p>
+          <p class="arrow">→ 2月新規フォロワーとPaid KOLフォロワーの重複確認</p>
+          <p>③ オーガニックKOLは来場者かどうか？</p>
+          <p class="arrow">→ 投稿の location タグで照合</p>
+          <p>④ カメラマン層とオーガニックKOLの重複率</p>
+          <p class="arrow">→ ビジネスカテゴリ × 投稿者属性でクロス集計</p>
+        </div>
+        <div class="note">⚠️ 2月データ取得後、Pythonスクリプトで自動照合</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📈</span>1月→2月 主要指標変化（目標予測）</div>
+        <div class="chart-wrap lg"><canvas id="monthComp"></canvas></div>
+      </div>
+    </div>
+  </div><!-- /cross -->
+
+
+  <!-- ════════════════════
+       TAB: ORGANIC-EXT (A5 ハッシュタグ外オーガニックKOL)
+  ════════════════════ -->
+  <div id="tab-organic-ext" class="tab-content">
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card c-green">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-value">150,732</div>
+        <div class="kpi-label">@maakii_kumamoto フォロワー数</div>
+        <div class="kpi-change up">熊本No.1グルメアカウント</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-icon">❤️</div>
+        <div class="kpi-value">2,028</div>
+        <div class="kpi-label">投稿いいね数</div>
+        <div class="kpi-change up">↑ ハッシュタグ内1位の2倍超</div>
+      </div>
+      <div class="kpi-card c-brown">
+        <div class="kpi-icon">💬</div>
+        <div class="kpi-value">22</div>
+        <div class="kpi-label">コメント数</div>
+        <div class="kpi-change up">Eng計 2,050</div>
+      </div>
+      <div class="kpi-card c-pale">
+        <div class="kpi-icon">💴</div>
+        <div class="kpi-value">¥ 0</div>
+        <div class="kpi-label">支払いコスト</div>
+        <div class="kpi-change up">ROI = ∞（完全無償）</div>
+      </div>
+    </div>
+
+    <div class="row col2">
+
+      <!-- プロフィールカード -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">⭐</span>インフルエンサープロフィール</div>
+
+        <div style="display:flex; gap:16px; align-items:flex-start; margin-bottom:18px;">
+          <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,var(--fc-green),var(--fc-teal-light)); display:flex; align-items:center; justify-content:center; font-size:1.6rem; flex-shrink:0;">🍽️</div>
+          <div>
+            <div style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">熊本グルメハンターmaki</div>
+            <div style="font-size:0.8rem; color:var(--fc-teal-light); margin-top:2px;">@maakii_kumamoto</div>
+            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+              <span style="background:rgba(64,128,112,0.2); color:var(--fc-teal-light); font-size:0.68rem; padding:2px 8px; border-radius:8px; border:1px solid rgba(126,188,188,0.3);">✅ 認証済み</span>
+              <span style="background:rgba(140,114,77,0.2); color:var(--gold-light); font-size:0.68rem; padding:2px 8px; border-radius:8px; border:1px solid rgba(140,114,77,0.3);">熊本グルメ</span>
+              <span style="background:rgba(126,188,188,0.1); color:var(--text-mid); font-size:0.68rem; padding:2px 8px; border-radius:8px;">月間80万PV</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:0.83rem; color:var(--text-mid); line-height:1.8; background:rgba(0,0,0,0.15); border-radius:10px; padding:12px; margin-bottom:16px;">
+          熊本No.1グルメアカウント。月に80万人が閲覧。毎日更新。スマホ1台で撮影から編集まで。TikTok 4.3万人。3月のご依頼は締め切り済み。
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.3rem; font-weight:600; color:var(--fc-teal-light);">150,732</div>
+            <div style="font-size:0.7rem; color:var(--text-mid); margin-top:3px;">フォロワー</div>
+          </div>
+          <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.3rem; font-weight:600; color:var(--fc-teal-light);">1,699</div>
+            <div style="font-size:0.7rem; color:var(--text-mid); margin-top:3px;">投稿数</div>
+          </div>
+          <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.3rem; font-weight:600; color:var(--fc-teal-light);">1.35%</div>
+            <div style="font-size:0.7rem; color:var(--text-mid); margin-top:3px;">Eng率</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 投稿詳細 -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📸</span>対象投稿（2026年2月9日）</div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px; margin-bottom:14px;">
+          <div style="font-size:0.75rem; color:var(--fc-teal); letter-spacing:0.1em; margin-bottom:8px;">CAPTION</div>
+          <div style="font-size:0.83rem; color:var(--text-mid); line-height:1.9;">
+            世の中は美味しい物で溢れてる🎶 こんにちは！グルメハンターmakiです😃<br>
+            素敵なイベントを発見しました！大津町の結婚式場<strong style="color:var(--text-primary);">【森の教会】</strong>で行われているキャンドルナイト✨<br>
+            2000ものキャンドルがゆらめき見る人の心を和らげます😊 カップルの方にぴったり！しかも<strong style="color:var(--fc-teal-light);">「無料」</strong>で見れちゃいます😆<br>
+            <span style="font-size:0.75rem; color:var(--text-faint);">（チャペルもとっても素敵でしたよ😊 結婚を考えられている人達には特におすすめです。）</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div style="text-align:center; background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.5rem; font-weight:700; color:var(--fc-teal-light);">2,028</div>
+            <div style="font-size:0.7rem; color:var(--text-mid);">❤️ いいね</div>
+          </div>
+          <div style="text-align:center; background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.5rem; font-weight:700; color:var(--fc-teal-light);">22</div>
+            <div style="font-size:0.7rem; color:var(--text-mid);">💬 コメント</div>
+          </div>
+          <div style="text-align:center; background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.2); border-radius:10px; padding:12px;">
+            <div style="font-family:'Noto Serif Display',serif; font-size:1.5rem; font-weight:700; color:var(--fc-teal-light);">2,050</div>
+            <div style="font-size:0.7rem; color:var(--text-mid);">📊 Eng計</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.78rem; color:var(--text-mid);">
+          📅 投稿日：2026年2月9日&nbsp;&nbsp;
+          🔗 <a href="https://www.instagram.com/p/DUh9aFak66U/" target="_blank" style="color:var(--fc-teal-light);">投稿を見る</a>
+        </div>
+        <div class="note" style="margin-top:12px;">
+          ⚠️ ハッシュタグ <strong>#森の教会キャンドルナイト</strong> は使用されていない自発投稿。グルメ・お出かけ系のフォロワー層へリーチしており、既存KOLとは異なる属性を獲得している可能性が高い。
+        </div>
+      </div>
+    </div>
+
+    <!-- Paid KOLとの比較 -->
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">⚖️</span>インパクト比較：@maakii_kumamoto vs Paid KOL 3名</div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>アカウント</th>
+              <th>種別</th>
+              <th style="text-align:right">フォロワー</th>
+              <th style="text-align:right">いいね</th>
+              <th style="text-align:right">コメント</th>
+              <th style="text-align:right">Eng計</th>
+              <th style="text-align:right">Eng率</th>
+              <th style="text-align:right">コスト</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(64,128,112,0.08);">
+              <td><strong style="color:var(--fc-teal-light);">@maakii_kumamoto</strong><div style="font-size:0.7rem;color:var(--text-mid)">熊本グルメハンターmaki ✅</div></td>
+              <td><span class="badge organic">オーガニック</span></td>
+              <td style="text-align:right; color:var(--fc-teal-light); font-weight:700;">150,732</td>
+              <td style="text-align:right; font-weight:700; color:var(--fc-teal-light);">2,028</td>
+              <td style="text-align:right;">22</td>
+              <td style="text-align:right; font-weight:700; color:var(--fc-teal-light);">2,050</td>
+              <td style="text-align:right;">1.35%</td>
+              <td style="text-align:right; color:var(--fc-teal-light); font-weight:700;">¥ 0</td>
+            </tr>
+            <tr>
+              <td><strong>@hokuro___</strong><div style="font-size:0.7rem;color:var(--text-mid)">ほくろちゃん</div></td>
+              <td><span class="badge paid">Paid</span></td>
+              <td style="text-align:right;">170,000</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right;">¥ —</td>
+            </tr>
+            <tr>
+              <td><strong>@kyushunmemo</strong><div style="font-size:0.7rem;color:var(--text-mid)">九州メモ</div></td>
+              <td><span class="badge paid">Paid</span></td>
+              <td style="text-align:right;">90,000</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right;">¥ —</td>
+            </tr>
+            <tr>
+              <td><strong>@oochikamoto</strong><div style="font-size:0.7rem;color:var(--text-mid)">おーちかマップ</div></td>
+              <td><span class="badge paid">Paid</span></td>
+              <td style="text-align:right;">300,000</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right; color:var(--text-mid);">取得後</td>
+              <td style="text-align:right;">¥ —</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note" style="margin-top:14px;">
+        🌟 @maakii_kumamoto は認証済み・熊本No.1グルメアカウントとして月間80万PVのリーチを持ち、Paid KOL（ほくろちゃん・おーちかマップ）と同等のフォロワー規模でありながらコスト¥0。来場後の自発投稿であり、エンゲージメントの質も高い。次回施策でのコラボ・優待招待を強く推奨。
+      </div>
+    </div>
+
+  </div><!-- /organic-ext -->
+
+
+  <!-- ════════════════════
+       TAB: REFERENCE (参考資料)
+  ════════════════════ -->
+  <div id="tab-reference" class="tab-content">
+
+    <!-- ① KOL カテゴリ説明 -->
+    <div class="row col2" style="margin-bottom:18px">
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">💴</span>Paid KOL とは？</div>
+        <div style="font-size:0.88rem; color:var(--text-mid); line-height:1.9;">
+          <p style="color:var(--text-primary); font-weight:600; margin-bottom:8px;">費用を支払って投稿をお願いしたインフルエンサー</p>
+          <p>今回の森の教会キャンドルナイト施策では、以下の3名のインスタグラマーに対して広告費を支払い、イベントの告知・紹介投稿をしてもらいました。</p>
+          <div style="margin:14px 0; display:flex; flex-direction:column; gap:8px;">
+            <div style="background:rgba(140,114,77,0.12); border:1px solid rgba(140,114,77,0.3); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--gold-light); font-weight:700;">ほくろちゃん</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@hokuro___</span>
+              <span style="float:right; color:var(--text-mid); font-size:0.82rem;">フォロワー 約17万人</span>
+            </div>
+            <div style="background:rgba(140,114,77,0.12); border:1px solid rgba(140,114,77,0.3); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--gold-light); font-weight:700;">九州メモ</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@kyushunmemo</span>
+              <span style="float:right; color:var(--text-mid); font-size:0.82rem;">フォロワー 約9万人</span>
+            </div>
+            <div style="background:rgba(140,114,77,0.12); border:1px solid rgba(140,114,77,0.3); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--gold-light); font-weight:700;">おーちかマップ</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@oochikamoto</span>
+              <span style="float:right; color:var(--text-mid); font-size:0.82rem;">フォロワー 約30万人</span>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-faint);">※ 3名の合計フォロワー数は約56万人。広告費総額は40万円（当初60万円から減額）。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🌿</span>オーガニック KOL とは？</div>
+        <div style="font-size:0.88rem; color:var(--text-mid); line-height:1.9;">
+          <p style="color:var(--text-primary); font-weight:600; margin-bottom:8px;">お金を払っていないのに自発的に投稿してくれた方</p>
+          <p>実際に森の教会を訪れて感動し、自分のインスタグラムで <strong style="color:var(--fc-teal-light);">#森の教会キャンドルナイト</strong> のハッシュタグをつけて投稿してくれた方々です。広告費ゼロで拡散してくれる、最も価値の高い口コミです。</p>
+          <div style="margin:14px 0; display:flex; flex-direction:column; gap:8px;">
+            <div style="background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.25); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--fc-teal-light); font-weight:700;">いちじくパイ</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@ichijikupai</span>
+              <span style="float:right; color:var(--fc-teal-light); font-size:0.82rem; font-weight:700;">いいね 902件</span>
+            </div>
+            <div style="background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.25); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--fc-teal-light); font-weight:700;">sky_love</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@sky_love_soramido_</span>
+              <span style="float:right; color:var(--fc-teal-light); font-size:0.82rem; font-weight:700;">いいね 174件</span>
+            </div>
+            <div style="background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.25); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--fc-teal-light); font-weight:700;">koji50207</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@koji50207</span>
+              <span style="float:right; color:var(--fc-teal-light); font-size:0.82rem; font-weight:700;">いいね 115件</span>
+            </div>
+            <div style="background:rgba(64,128,112,0.12); border:1px solid rgba(126,188,188,0.25); border-radius:10px; padding:12px 16px;">
+              <span style="color:var(--fc-teal-light); font-weight:700;">takahiro8066</span>
+              <span style="color:var(--text-faint); font-size:0.78rem; margin-left:8px;">@takahiro8066</span>
+              <span style="float:right; color:var(--fc-teal-light); font-size:0.82rem; font-weight:700;">いいね 37件</span>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-faint);">※ 上記は1月時点の確認済みオーガニックKOL。2月分のハッシュタグ分析後に追加予定。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 指標の読み方 -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><span class="ct-icon">📊</span>指標・数値の読み方</div>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">投稿数</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            ハッシュタグ <strong style="color:var(--text-primary);">#森の教会キャンドルナイト</strong> をつけてインスタグラムに投稿された件数。1月は11件確認済み。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">いいね数（Likes）</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            その投稿についた「いいね」の数。多いほどその投稿が多くの人に届いて共感されたことを意味します。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">エンゲージメント（Eng）</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            「いいね」＋「コメント」の合計数。投稿に対して視聴者が実際にアクション（反応）した総量を表します。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">エンゲージメント率（Eng率）</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            エンゲージメント ÷ フォロワー数 × 100（%）。フォロワーのうち何%が反応したかを示す「質の指標」。一般的に3〜5%が平均的とされています。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">CPE（Cost Per Engagement）</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            広告費 ÷ エンゲージメント数。1件の反応を得るのにかかったコスト。数値が低いほど費用対効果が高いことを意味します。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">フォロワー単価</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            広告費 ÷ KOLの総フォロワー数。1人のフォロワーにリーチするのにかかったコスト。業界標準は1.5〜3円。今回は約0.71円と大幅に割安。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">リーチ</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            投稿が実際に表示された（見られた）ユーザー数の推計。KOLのフォロワー数を基準に算出しますが、実際の表示数はこれより多い場合があります。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">ROI（投資対効果）</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            費用に対してどれだけの成果が得られたかの比率。オーガニックKOLはコストゼロのため ROI = ∞（無限大）となります。
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:16px;">
+          <div style="color:var(--fc-teal-light); font-weight:700; margin-bottom:6px; font-size:0.9rem;">コホート分布</div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.8;">
+            フォロワーをアクティブ度・属性ごとに分類したもの。「休眠（45%）」「インフルエンサー（20%）」「アクティブ（16%）」などに区分します。
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ③ 4エージェントの役割 -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><span class="ct-icon">🤖</span>4エージェント（分析チーム）の役割</div>
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px;">
+
+        <div style="background:rgba(64,128,112,0.1); border:1px solid rgba(126,188,188,0.2); border-radius:12px; padding:18px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="background:var(--fc-green); color:#fff; font-size:0.7rem; font-weight:700; padding:3px 9px; border-radius:20px;">A1</span>
+            <span style="color:var(--fc-teal-light); font-weight:700;">フォロワー分析エージェント</span>
+          </div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.9;">
+            <strong style="color:var(--text-primary);">@the_forest_church のフォロワー全員</strong>のデータを収集・分析します。誰がフォローしているか（地域・職業・活動頻度など）を把握し、1月→2月でどれだけフォロワーが増えたかを追跡します。
+          </div>
+        </div>
+
+        <div style="background:rgba(64,128,112,0.1); border:1px solid rgba(126,188,188,0.2); border-radius:12px; padding:18px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="background:var(--fc-teal); color:#fff; font-size:0.7rem; font-weight:700; padding:3px 9px; border-radius:20px;">A2</span>
+            <span style="color:var(--fc-teal-light); font-weight:700;">ハッシュタグ分析エージェント</span>
+          </div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.9;">
+            <strong style="color:var(--text-primary);">#森の教会キャンドルナイト</strong>がついた投稿を全件収集します。誰が投稿したか、いいね・コメントは何件か、どんな写真が人気かなどを分析します。
+          </div>
+        </div>
+
+        <div style="background:rgba(140,114,77,0.1); border:1px solid rgba(140,114,77,0.25); border-radius:12px; padding:18px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="background:var(--fc-brown); color:#fff; font-size:0.7rem; font-weight:700; padding:3px 9px; border-radius:20px;">A3</span>
+            <span style="color:var(--gold-light); font-weight:700;">Paid KOL 検証エージェント</span>
+          </div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.9;">
+            お金を払った3名（ほくろちゃん・九州メモ・おーちかマップ）の<strong style="color:var(--text-primary);">実際の投稿パフォーマンス</strong>を測定します。費用対効果（CPE・エンゲージメント率）を数値で検証し、投資判断の材料にします。
+          </div>
+        </div>
+
+        <div style="background:rgba(64,128,112,0.1); border:1px solid rgba(126,188,188,0.2); border-radius:12px; padding:18px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span style="background:var(--fc-teal-light); color:#0c1e18; font-size:0.7rem; font-weight:700; padding:3px 9px; border-radius:20px;">A4</span>
+            <span style="color:var(--fc-teal-light); font-weight:700;">オーガニック KOL 発掘エージェント</span>
+          </div>
+          <div style="color:var(--text-mid); font-size:0.83rem; line-height:1.9;">
+            自発的に投稿してくれた方々のアカウント情報（フォロワー数・エンゲージメント率など）を収集します。次のキャンペーンで<strong style="color:var(--text-primary);">コラボ・優待招待すべき候補者</strong>をスコアリングして優先順位をつけます。
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ④ ハッシュタグ投稿一覧（全件・生データ） -->
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">📋</span>#森の教会キャンドルナイト 投稿一覧（1月・全件）</div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>投稿者アカウント</th>
+            <th>投稿数</th>
+            <th>いいね合計</th>
+            <th>コメント合計</th>
+            <th>エンゲージメント計</th>
+            <th>種別</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>@ichijikupai</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="color:var(--fc-teal-light); font-weight:700; text-align:right">902</td>
+            <td style="text-align:right">7</td>
+            <td style="color:var(--fc-teal-light); font-weight:700; text-align:right">909</td>
+            <td><span class="badge organic">オーガニックKOL</span></td>
+          </tr>
+          <tr>
+            <td><strong>@sky_love_soramido_</strong></td>
+            <td style="text-align:center">2件</td>
+            <td style="text-align:right">174</td>
+            <td style="text-align:right">9</td>
+            <td style="color:var(--fc-teal-light); font-weight:700; text-align:right">183</td>
+            <td><span class="badge organic">オーガニックKOL</span></td>
+          </tr>
+          <tr>
+            <td><strong>@koji50207</strong></td>
+            <td style="text-align:center">2件</td>
+            <td style="text-align:right">115</td>
+            <td style="text-align:right">2</td>
+            <td style="color:var(--fc-teal-light); font-weight:700; text-align:right">117</td>
+            <td><span class="badge organic">オーガニックKOL</span></td>
+          </tr>
+          <tr>
+            <td><strong>@tomohiro_hidaka</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">39</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">39</td>
+            <td><span class="badge self">店舗本人</span></td>
+          </tr>
+          <tr>
+            <td><strong>@takahiro8066</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">37</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">37</td>
+            <td><span class="badge organic">オーガニックKOL</span></td>
+          </tr>
+          <tr>
+            <td><strong>@mi.wa5029</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">10</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">10</td>
+            <td><span class="badge self">一般来場者</span></td>
+          </tr>
+          <tr>
+            <td><strong>@tam_kim_photon</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">7</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">7</td>
+            <td><span class="badge self">一般来場者</span></td>
+          </tr>
+          <tr>
+            <td><strong>@present_private</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">5</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">5</td>
+            <td><span class="badge self">一般来場者</span></td>
+          </tr>
+          <tr>
+            <td><strong>@nao.n.115</strong></td>
+            <td style="text-align:center">1件</td>
+            <td style="text-align:right">4</td>
+            <td style="text-align:right">0</td>
+            <td style="text-align:right">4</td>
+            <td><span class="badge self">一般来場者</span></td>
+          </tr>
+          <tr style="background:rgba(126,188,188,0.06); font-weight:700;">
+            <td>合計</td>
+            <td style="text-align:center">11件</td>
+            <td style="color:var(--fc-teal-light); text-align:right">1,293</td>
+            <td style="text-align:right">18</td>
+            <td style="color:var(--fc-teal-light); text-align:right">1,311</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note" style="margin-top:14px">
+        ⚠️ 上記は2026年1月時点のデータです。2月分のハッシュタグ投稿は Agent #2 でデータ取得後に追加されます。Paid KOL（ほくろちゃん・九州メモ・おーちかマップ）の投稿はハッシュタグなしの場合もあるため、別途 A3 エージェントで個別収集します。
+      </div>
+    </div>
+
+  </div><!-- /reference -->
+
+
+  <div class="footer">
+    <p>Blinx株式会社 · The Forest Church Instagram Analytics Hub v2.0</p>
+  </div>
+
+</main>
+
+<!-- ═══════════ JS ═══════════ -->
+<script>
+  const FC = {
+    green:     '#408070',
+    teal:      '#459999',
+    tealLight: '#7ebcbc',
+    tealPale:  '#b8d9d0',
+    brown:     '#8c724d',
+    gold:      '#c4a66a',
+    goldLight: '#ddc898',
+    text:      '#a8c8bc',
+  };
+  Chart.defaults.color = FC.text;
+  Chart.defaults.borderColor = 'rgba(126,188,188,0.12)';
+
+  /* ── Nav ── */
+  function showTab(id, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    el.classList.add('active');
+    const titles = {
+      overview:  ['全体 サマリー',        'キャンドルナイト施策 — Instagram 全チャネル統合分析'],
+      followers: ['Agent #1 — フォロワー分析', '@the_forest_church フォロワー属性・増減トラッキング'],
+      hashtag:   ['Agent #2 — ハッシュタグ分析','#森の教会キャンドルナイト 投稿・エンゲージメント全量'],
+      paid:      ['Agent #3 — Paid KOL 検証',   'ほくろ / 九州メモ / 大近マップ 費用対効果'],
+      organic:   ['Agent #4 — オーガニック KOL 発掘',   'コストゼロで拡散してくれた KOL の発掘と評価'],
+      cross:     ['クロス 分析',               '4エージェントデータ統合 — チャネル横断インサイト'],
+      'organic-ext': ['オーガニック KOL', 'ハッシュタグ外の自発投稿インフルエンサー分析'],
+      reference: ['参考 資料',                 '用語説明・指標の読み方・データソース一覧'],
+    };
+    document.getElementById('page-title').innerHTML =
+      titles[id][0].replace(' ', ' <em>') + '</em>';
+    document.getElementById('page-sub').textContent = titles[id][1];
+  }
+  function setMonth(btn) {
+    btn.closest('.toggle-btns').querySelectorAll('.toggle-btn')
+      .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } } },
+  };
+  const gridY = { grid: { color: 'rgba(126,188,188,0.08)' } };
+  const noGridX = { grid: { display: false } };
+
+  /* Overview trend */
+  new Chart('overviewTrend', {
+    type:'bar',
+    data:{
+      labels:['1月上旬','1月中旬','1月下旬','2月上旬','2月中旬','2月下旬'],
+      datasets:[
+        { label:'投稿数', data:[3,4,4,null,null,null], backgroundColor:'rgba(64,128,112,0.55)', borderRadius:6, yAxisID:'y' },
+        { label:'Eng計', data:[312,499,500,null,null,null], type:'line', borderColor:FC.tealLight,
+          backgroundColor:'rgba(126,188,188,0.1)', fill:true, tension:0.4, pointBackgroundColor:FC.tealLight, yAxisID:'y2' }
+      ]
+    },
+    options:{ ...opts, scales:{ y:{...gridY,beginAtZero:true}, y2:{...gridY,beginAtZero:true,position:'right',grid:{display:false}}, x:{...noGridX} } }
+  });
+
+  /* Overview pie */
+  new Chart('overviewPie', {
+    type:'doughnut',
+    data:{
+      labels:['オーガニックKOL','一般フォロワー','店舗本人'],
+      datasets:[{ data:[6,2,1],
+        backgroundColor:[FC.teal,'rgba(126,188,188,0.4)','rgba(140,114,77,0.5)'],
+        borderWidth:0 }]
+    },
+    options:{ ...opts, cutout:'62%' }
+  });
+
+  /* Follower cohort */
+  new Chart('followCohort', {
+    type:'bar',
+    data:{
+      labels:['休眠','インフルエンサー','アクティブ','ライト','ゴースト','新規'],
+      datasets:[
+        { label:'1月', data:[2690,1218,971,520,514,55], backgroundColor:'rgba(64,128,112,0.55)', borderRadius:4 },
+        { label:'2月（取得後）', data:[null,null,null,null,null,null], backgroundColor:'rgba(140,114,77,0.5)', borderRadius:4 }
+      ]
+    },
+    options:{ ...opts, scales:{ y:{...gridY,beginAtZero:true}, x:{...noGridX} } }
+  });
+
+  /* Follower region */
+  new Chart('followRegion', {
+    type:'bar',
+    data:{
+      labels:['熊本','福岡','東京','阿蘇','鹿児島','大分','宮崎','大阪'],
+      datasets:[{ data:[979,139,106,71,56,40,38,33],
+        backgroundColor:'rgba(69,153,153,0.65)', borderRadius:5 }]
+    },
+    options:{
+      ...opts,
+      indexAxis:'y',
+      plugins:{ legend:{display:false} },
+      scales:{ x:{...gridY,beginAtZero:true}, y:{...noGridX} }
+    }
+  });
+
+  /* Hashtag engagement */
+  new Chart('hashEng', {
+    type:'bar',
+    data:{
+      labels:['@ichijikupai','@sky_love(x2)','@koji50207(x2)','@tomohiro','@takahiro','others'],
+      datasets:[{ data:[902,174,115,39,37,24],
+        backgroundColor:[FC.tealLight,'rgba(64,128,112,0.7)','rgba(64,128,112,0.6)',
+          'rgba(64,128,112,0.5)','rgba(64,128,112,0.4)','rgba(64,128,112,0.3)'],
+        borderRadius:6 }]
+    },
+    options:{
+      ...opts,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{...gridY,beginAtZero:true}, x:{...noGridX,ticks:{font:{size:9}}} }
+    }
+  });
+
+  /* Paid doughnut */
+  new Chart('paidDoughnut', {
+    type:'doughnut',
+    data:{
+      labels:['おーちかマップ (30万)','ほくろちゃん (17万)','九州メモ (9万)'],
+      datasets:[{ data:[300000,170000,90000],
+        backgroundColor:[FC.tealLight, FC.teal, FC.brown],
+        borderWidth:0 }]
+    },
+    options:{ ...opts, cutout:'58%' }
+  });
+
+  /* Organic vs Paid */
+  new Chart('orgVsPaid', {
+    type:'bar',
+    data:{
+      labels:['@ichijikupai\n(オーガニック)','@sky_love\n(オーガニック)','@koji50207\n(オーガニック)','ほくろ\n(Paid)','九州メモ\n(Paid)','大近マップ\n(Paid)'],
+      datasets:[{ data:[902,174,115,null,null,null],
+        backgroundColor:[FC.teal,FC.teal,FC.teal,FC.brown,FC.brown,FC.brown],
+        borderRadius:6 }]
+    },
+    options:{
+      ...opts,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{...gridY,beginAtZero:true}, x:{...noGridX,ticks:{font:{size:9}}} }
+    }
+  });
+
+  /* Cross Radar */
+  new Chart('crossRadar', {
+    type:'radar',
+    data:{
+      labels:['Eng率','リーチ規模','ROI','ブランド適合','コスト効率','来場転換力'],
+      datasets:[
+        { label:'Paid KOL', data:[40,90,30,70,30,50],
+          backgroundColor:'rgba(140,114,77,0.15)', borderColor:FC.brown,
+          pointBackgroundColor:FC.brown, borderWidth:2 },
+        { label:'オーガニックKOL', data:[85,40,100,95,100,80],
+          backgroundColor:'rgba(64,128,112,0.15)', borderColor:FC.tealLight,
+          pointBackgroundColor:FC.tealLight, borderWidth:2 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'top', labels:{ usePointStyle:true, font:{size:11} } } },
+      scales:{ r:{
+        min:0, max:100,
+        angleLines:{ color:'rgba(126,188,188,0.1)' },
+        grid:{ color:'rgba(126,188,188,0.1)' },
+        pointLabels:{ color:FC.text, font:{size:11} },
+        ticks:{ display:false }
+      }}
+    }
+  });
+
+  /* Month compare */
+  new Chart('monthComp', {
+    type:'bar',
+    data:{
+      labels:['フォロワー\n(×0.01)','ハッシュタグ\n投稿数','総いいね\n(÷10)','オーガニックKOL\n投稿者数'],
+      datasets:[
+        { label:'1月実績', data:[596.8,11,131,5], backgroundColor:'rgba(64,128,112,0.6)', borderRadius:4 },
+        { label:'2月目標', data:[620,20,200,8], backgroundColor:'rgba(140,114,77,0.45)', borderRadius:4,
+          borderWidth:1, borderColor:FC.brown }
+      ]
+    },
+    options:{ ...opts, scales:{ y:{...gridY,beginAtZero:true}, x:{...noGridX,ticks:{font:{size:9}}} } }
+  });
+</script>
+</body>
+</html>
