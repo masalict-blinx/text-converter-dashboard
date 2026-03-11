@@ -426,6 +426,7 @@
       <button class="tab-btn" onclick="switchTab('tracker', this)">🌐 IP トラッカー</button>
       <button class="tab-btn" onclick="switchTab('ga4', this)">📊 GA4</button>
       <button class="tab-btn" onclick="switchTab('forest', this)">🌿 Forest Church</button>
+      <button class="tab-btn" onclick="switchTab('animatch', this)">🐾 AniMatch</button>
     </div>
 
     <!-- ========== TAB: Text Converter ========== -->
@@ -787,6 +788,89 @@
       </div>
     </div><!-- /tab-forest -->
 
+    <!-- ========== TAB: AniMatch ========== -->
+    <div id="tab-animatch" class="tab-panel">
+
+      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div style="font-size:14px;font-weight:700;color:#555;">🐾 JEKA動物タイプ診断 ANIMATCH</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="am-last-updated" style="font-size:11px;color:#999;"></span>
+          <button class="refresh-btn" onclick="animatchLoad()">🔄 更新</button>
+        </div>
+      </div>
+
+      <div id="animatch-loading" class="loading">データを読み込んでいます...</div>
+
+      <div id="animatch-dashboard" style="display:none;">
+
+        <!-- KPI -->
+        <div class="tracker-kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">総セッション数</div>
+            <div class="tracker-kpi-value" id="am-total">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">診断完了数</div>
+            <div class="tracker-kpi-value" style="color:#388e3c;" id="am-completed">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">完了率</div>
+            <div class="tracker-kpi-value" style="background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="am-rate">—</div>
+          </div>
+          <div class="tracker-kpi-card">
+            <div class="tracker-kpi-label">直近7日</div>
+            <div class="tracker-kpi-value" style="color:#f57c00;" id="am-recent7">—</div>
+          </div>
+        </div>
+
+        <!-- タイプ分布 + 軸別分布 -->
+        <div class="two-col" style="margin-bottom:20px;">
+          <div class="chart-card" style="flex:2;">
+            <div class="chart-title">🏆 タイプ別診断数（上位12）</div>
+            <canvas id="am-type-chart" height="120"></canvas>
+          </div>
+          <div class="chart-card" style="flex:1;">
+            <div class="chart-title">📅 日別診断数（直近30日）</div>
+            <canvas id="am-daily-chart" height="120"></canvas>
+          </div>
+        </div>
+
+        <!-- 軸別ドーナツ -->
+        <div class="charts-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+          <div class="chart-card">
+            <div class="chart-title" style="font-size:12px;">J/K軸</div>
+            <canvas id="am-axis-jk"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" style="font-size:12px;">E/C軸</div>
+            <canvas id="am-axis-ec"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" style="font-size:12px;">A/S軸</div>
+            <canvas id="am-axis-as"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" style="font-size:12px;">N/T軸</div>
+            <canvas id="am-axis-nt"></canvas>
+          </div>
+        </div>
+
+        <!-- 最新診断テーブル -->
+        <div class="table-card">
+          <div class="chart-title" style="margin-bottom:12px;">📋 最新の診断結果（直近20件）</div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr><th>日時（JST）</th><th>アイコン</th><th>タイプコード</th><th>タイプ名</th></tr>
+              </thead>
+              <tbody id="am-sessions-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /tab-animatch -->
+
   </div><!-- /container -->
 
   <script>
@@ -799,6 +883,7 @@
       if (name === 'sales'   && !salesLoaded)   salesLoad();
       if (name === 'slides'  && !slidesLoaded)  loadSlideStats();
       if (name === 'tracker' && !trackerLoaded) trackerLoad();
+      if (name === 'animatch' && !animatchLoaded) animatchLoad();
     }
 
 
@@ -1350,6 +1435,154 @@
 
     setInterval(() => {
       if (document.getElementById('tab-tracker').classList.contains('active')) trackerLoad();
+    }, 60000);
+
+    // ========== AniMatch ==========
+    let animatchLoaded = false;
+
+    async function animatchLoad() {
+      const loadingEl  = document.getElementById('animatch-loading');
+      const dashEl     = document.getElementById('animatch-dashboard');
+      loadingEl.style.display = 'block';
+      dashEl.style.display    = 'none';
+      try {
+        const [sessRes, ansRes] = await Promise.all([
+          fetch(`${TR_URL}/rest/v1/animatch_sessions?select=*&order=created_at.desc&limit=2000`, {
+            headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
+          }),
+          fetch(`${TR_URL}/rest/v1/animatch_answers?select=choice&limit=10000`, {
+            headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
+          })
+        ]);
+        if (!sessRes.ok) throw new Error('sessions: HTTP ' + sessRes.status);
+        const sessions = await sessRes.json();
+        const answers  = ansRes.ok ? await ansRes.json() : [];
+        amRender(sessions, answers);
+        loadingEl.style.display = 'none';
+        dashEl.style.display    = 'block';
+        document.getElementById('am-last-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
+        animatchLoaded = true;
+      } catch(e) {
+        loadingEl.textContent = 'エラー: ' + e.message;
+      }
+    }
+
+    function amRender(sessions, answers) {
+      // KPI
+      const total     = sessions.length;
+      const completed = sessions.filter(s => s.completed).length;
+      const rate      = total ? ((completed / total) * 100).toFixed(1) : 0;
+      const cutoff7   = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recent7   = sessions.filter(s => new Date(s.created_at) >= cutoff7).length;
+      document.getElementById('am-total').textContent     = total;
+      document.getElementById('am-completed').textContent = completed;
+      document.getElementById('am-rate').textContent      = rate + '%';
+      document.getElementById('am-recent7').textContent   = recent7;
+
+      // タイプ分布棒グラフ
+      const typeCounts = {};
+      sessions.filter(s => s.completed && s.result_type).forEach(s => {
+        const key = (s.result_icon ? s.result_icon + ' ' : '') + s.result_type;
+        typeCounts[key] = (typeCounts[key] || 0) + 1;
+      });
+      const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+      if (window.amTypeChart) window.amTypeChart.destroy();
+      window.amTypeChart = new Chart(document.getElementById('am-type-chart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: sortedTypes.map(([k]) => k),
+          datasets: [{
+            data: sortedTypes.map(([, v]) => v),
+            backgroundColor: 'rgba(102,126,234,0.75)',
+            borderColor: 'rgba(102,126,234,1)',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+
+      // 日別診断数（直近30日）
+      const days = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days[d.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })] = 0;
+      }
+      sessions.forEach(s => {
+        const label = new Date(s.created_at).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
+        if (label in days) days[label]++;
+      });
+      if (window.amDailyChart) window.amDailyChart.destroy();
+      window.amDailyChart = new Chart(document.getElementById('am-daily-chart').getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: Object.keys(days),
+          datasets: [{
+            data: Object.values(days),
+            borderColor: 'rgba(118,75,162,0.9)',
+            backgroundColor: 'rgba(118,75,162,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+
+      // 軸別ドーナツ
+      const axesDef = [
+        { id: 'am-axis-jk', a: 'J', b: 'K', aLabel: 'J（ペットオーナー）', bLabel: 'K（動物好き）',    colors: ['rgba(102,126,234,0.8)', 'rgba(118,75,162,0.8)'] },
+        { id: 'am-axis-ec', a: 'E', b: 'C', aLabel: 'E（擬人化型）',       bLabel: 'C（本物志向型）', colors: ['rgba(255,159,64,0.8)',  'rgba(255,99,132,0.8)'] },
+        { id: 'am-axis-as', a: 'A', b: 'S', aLabel: 'A（飾る派）',         bLabel: 'S（発信派）',     colors: ['rgba(75,192,192,0.8)',  'rgba(54,162,235,0.8)'] },
+        { id: 'am-axis-nt', a: 'N', b: 'T', aLabel: 'N（共感型）',         bLabel: 'T（発見型）',     colors: ['rgba(255,206,86,0.8)', 'rgba(153,102,255,0.8)'] }
+      ];
+      axesDef.forEach(ax => {
+        const aCount = answers.filter(a => a.choice === ax.a).length;
+        const bCount = answers.filter(a => a.choice === ax.b).length;
+        const key = 'amAxis_' + ax.id;
+        if (window[key]) window[key].destroy();
+        window[key] = new Chart(document.getElementById(ax.id).getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: [ax.aLabel, ax.bLabel],
+            datasets: [{ data: [aCount, bCount], backgroundColor: ax.colors, borderWidth: 2 }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } }
+            }
+          }
+        });
+      });
+
+      // 最新診断テーブル
+      const tbody = document.getElementById('am-sessions-body');
+      const recent = sessions.filter(s => s.completed && s.result_type).slice(0, 20);
+      if (recent.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4' style='color:#ccc;padding:16px 0;text-align:center;'>データなし</td></tr>";
+      } else {
+        tbody.innerHTML = recent.map(s => `
+          <tr>
+            <td style="white-space:nowrap;font-size:12px;">${trFormatJST(s.completed_at || s.created_at)}</td>
+            <td style="font-size:20px;text-align:center;">${s.result_icon || '—'}</td>
+            <td style="font-weight:700;font-family:monospace;">${s.result_type || '—'}</td>
+            <td style="font-size:13px;">${s.result_name || '—'}</td>
+          </tr>`).join('');
+      }
+    }
+
+    setInterval(() => {
+      if (document.getElementById('tab-animatch').classList.contains('active')) animatchLoad();
     }, 60000);
   </script>
 </body>
