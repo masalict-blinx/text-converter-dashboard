@@ -1447,7 +1447,7 @@
       dashEl.style.display    = 'none';
       try {
         const [sessRes, ansRes] = await Promise.all([
-          fetch(`${TR_URL}/rest/v1/animatch_sessions?select=*&order=created_at.desc&limit=2000`, {
+          fetch(`${TR_URL}/rest/v1/animatch_sessions?select=*&order=started_at.desc&limit=2000`, {
             headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
           }),
           fetch(`${TR_URL}/rest/v1/animatch_answers?select=choice&limit=10000`, {
@@ -1473,7 +1473,7 @@
       const completed = sessions.filter(s => s.completed).length;
       const rate      = total ? ((completed / total) * 100).toFixed(1) : 0;
       const cutoff7   = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recent7   = sessions.filter(s => new Date(s.created_at) >= cutoff7).length;
+      const recent7   = sessions.filter(s => new Date(s.started_at) >= cutoff7).length;
       document.getElementById('am-total').textContent     = total;
       document.getElementById('am-completed').textContent = completed;
       document.getElementById('am-rate').textContent      = rate + '%';
@@ -1513,7 +1513,7 @@
         days[d.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })] = 0;
       }
       sessions.forEach(s => {
-        const label = new Date(s.created_at).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
+        const label = new Date(s.started_at).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
         if (label in days) days[label]++;
       });
       if (window.amDailyChart) window.amDailyChart.destroy();
