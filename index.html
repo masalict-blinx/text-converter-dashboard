@@ -3,1588 +3,357 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blinx Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Blinx Hub</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #333;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e2e8f0;
       min-height: 100vh;
     }
 
-    .container { max-width: 1400px; margin: 0 auto; }
-
+    /* ── Header ── */
     .header {
-      background: white;
-      border-radius: 12px;
-      padding: 20px 30px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
+      padding: 20px 40px;
+      border-bottom: 1px solid #1e293b;
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .header-left h1 {
-      font-size: 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .subtitle { color: #666; font-size: 13px; margin-top: 4px; }
-
-    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    /* タブ */
-    .tabs {
-      background: white;
-      border-radius: 12px;
-      padding: 6px 16px 0;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      display: flex;
-      gap: 4px;
-    }
-
-    .tab-btn {
-      background: none;
-      border: none;
-      padding: 12px 24px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      color: #999;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -1px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn:hover { color: #667eea; }
-    .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    /* フィルターグループ */
-    .filter-group {
-      display: flex;
-      background: #f0f0f0;
-      border-radius: 8px;
-      padding: 3px;
-      gap: 3px;
-    }
-
-    .filter-btn {
-      background: transparent;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      color: #666;
-      transition: all 0.2s;
-    }
-
-    .filter-btn.active {
-      background: white;
-      color: #667eea;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .refresh-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: opacity 0.2s;
-    }
-
-    .refresh-btn:hover { opacity: 0.9; }
-
-    /* Source Cards */
-    .source-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .source-card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      border-left: 5px solid transparent;
-      transition: transform 0.2s;
-    }
-
-    .source-card:hover { transform: translateY(-3px); }
-    .source-card.plaud { border-left-color: #1976d2; }
-    .source-card.lark  { border-left-color: #7b1fa2; }
-    .source-card.total { border-left-color: #667eea; }
-
-    .source-header {
+    .logo {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
     }
 
-    .source-icon { font-size: 28px; }
-
-    .source-title { font-size: 15px; font-weight: 700; color: #333; }
-    .source-desc  { font-size: 12px; color: #999; margin-top: 2px; }
-
-    .source-count {
-      font-size: 42px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 8px;
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
+      color: white;
     }
 
-    .source-card.plaud .source-count { color: #1976d2; }
-    .source-card.lark  .source-count { color: #7b1fa2; }
-    .source-card.total .source-count {
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .source-sub { font-size: 13px; color: #999; }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-
-    .stat-card:hover { transform: translateY(-3px); }
-    .stat-label { font-size: 12px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 28px; font-weight: bold; color: #333; }
-    .stat-subvalue { font-size: 12px; color: #999; margin-top: 4px; }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .chart-card {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .chart-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; }
-
-    .table-card {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      overflow-x: auto;
-    }
-
-    table { width: 100%; border-collapse: collapse; }
-
-    th {
-      background: #f8f9fa;
-      padding: 10px 12px;
-      text-align: left;
-      font-weight: 600;
-      color: #666;
-      font-size: 12px;
+    .header-sub {
+      font-size: 11px;
+      color: #64748b;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-    tr:hover { background: #f8f9fa; }
+    /* ── Main ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
 
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 10px;
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-label {
       font-size: 11px;
       font-weight: 600;
-    }
-
-    .badge-plaud   { background: #e3f2fd; color: #1976d2; }
-    .badge-lark    { background: #f3e5f5; color: #7b1fa2; }
-    .badge-claude  { background: #fff3e0; color: #f57c00; }
-    .badge-success { background: #e8f5e9; color: #388e3c; }
-    .badge-error   { background: #ffebee; color: #c62828; }
-    .badge-mail    { background: #e3f2fd; color: #1565c0; }
-    .badge-slack   { background: #ede7f6; color: #5e35b1; }
-    .badge-fb      { background: #e8eaf6; color: #1877f2; }
-
-    .section-divider {
-      background: white;
-      border-radius: 12px;
-      padding: 16px 24px;
-      margin: 24px 0 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      font-size: 18px;
-      font-weight: 700;
-      color: #333;
-      border-left: 5px solid #f59e0b;
-    }
-
-    .period-label {
-      display: inline-block;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 3px 12px;
-      border-radius: 20px;
-      margin-left: 8px;
-      vertical-align: middle;
-    }
-
-    .loading { text-align: center; padding: 50px; color: white; font-size: 18px; }
-
-    /* Sales AI 専用 */
-    .sales-status-bar {
-      background: white;
-      border-radius: 12px;
-      padding: 14px 20px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       margin-bottom: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: #555;
     }
 
-    .status-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #ccc;
-      display: inline-block;
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #1e293b;
     }
 
-    .status-dot.running { background: #22c55e; animation: pulse 2s infinite; }
-    .status-dot.stopped { background: #ef4444; }
-
-    @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }
-
-    .sales-stats-grid {
+    /* ── Cards ── */
+    .grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: 12px;
     }
 
-    .sales-stat-card {
-      background: white;
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.1s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .card:hover {
+      border-color: #334155;
+      background: #1a2535;
+      transform: translateY(-1px);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 3px;
+    }
+
+    .card-desc {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .card-url {
+      font-size: 10px;
+      color: #334155;
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
+    .badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .badge-public { background: #064e3b; color: #34d399; }
+    .badge-private { background: #1e1b4b; color: #818cf8; }
+    .badge-internal { background: #1c1917; color: #78716c; }
+
+    /* ── Color variants ── */
+    .icon-purple { background: #1e1b4b; }
+    .icon-blue   { background: #0c1f3d; }
+    .icon-pink   { background: #2d1b2e; }
+    .icon-green  { background: #0a2818; }
+    .icon-orange { background: #2d1500; }
+    .icon-slate  { background: #0f172a; }
+    .icon-cyan   { background: #082030; }
+    .icon-red    { background: #2d0a0a; }
+
+    /* ── Footer ── */
+    .footer {
       text-align: center;
-      transition: transform 0.2s;
+      padding: 32px;
+      border-top: 1px solid #1e293b;
+      font-size: 11px;
+      color: #334155;
     }
-
-    .sales-stat-card:hover { transform: translateY(-3px); }
-    .sales-stat-label { font-size: 12px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-stat-value { font-size: 36px; font-weight: 800; line-height: 1; }
-    .sales-stat-sub   { font-size: 11px; color: #999; margin-top: 6px; }
-
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-
-    .log-panel {
-      background: #1a1a2e;
-      border-radius: 8px;
-      padding: 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 12px;
-      line-height: 1.6;
-      max-height: 360px;
-      overflow-y: auto;
-      color: #94a3b8;
-    }
-
-    .log-error   { color: #f87171; }
-    .log-ai      { color: #a78bfa; }
-    .log-obsidian{ color: #34d399; }
-    .log-slack   { color: #818cf8; }
-    .log-mail    { color: #60a5fa; }
-    .log-send    { color: #fbbf24; }
-
-    .sales-offline-notice {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      color: #999;
-    }
-
-    .sales-offline-notice h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
-    .sales-offline-notice code { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
-
-    .refresh-note { font-size: 11px; color: #999; margin-bottom: 8px; }
 
     @media (max-width: 768px) {
-      .charts-grid { grid-template-columns: 1fr; }
-      .source-grid { grid-template-columns: 1fr; }
-      .sales-stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .two-col { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .header { padding: 16px 20px; }
+      .main { padding: 32px 16px; }
     }
-
-    /* IP トラッカー */
-    .tracker-kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .tracker-kpi-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-    .tracker-kpi-card:hover { transform: translateY(-3px); }
-    .tracker-kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .tracker-kpi-value { font-size: 36px; font-weight: 800; line-height: 1; color: #333; }
-    .badge-bot     { background: #ffebee; color: #c62828; }
-    .badge-human   { background: #e8f5e9; color: #388e3c; }
-    .badge-hosting { background: #fff3e0; color: #f57c00; }
-    .badge-isp     { background: #e3f2fd; color: #1565c0; }
-    .badge-business{ background: #f3e5f5; color: #7b1fa2; }
-
-    /* iframe タブ */
-    .iframe-tab-wrap {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      height: calc(100vh - 180px);
-      min-height: 600px;
-    }
-    .iframe-tab-wrap iframe {
-      width: 100%; height: 100%; border: none; display: block;
-    }
-    .iframe-offline-notice {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      color: #999;
-    }
-    .iframe-offline-notice h3 { font-size: 18px; color: #555; margin-bottom: 8px; }
-    .iframe-offline-notice code { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
   </style>
 </head>
 <body>
-  <div class="container">
 
-    <!-- ヘッダー -->
-    <div class="header">
-      <div class="header-left">
-        <h1>⚡ Blinx Dashboard</h1>
-        <p class="subtitle">Blinx 統合管理ダッシュボード</p>
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">B</div>
+      <div>
+        <div class="logo-text">Blinx Hub</div>
+        <div class="header-sub">Internal Services Portal</div>
       </div>
     </div>
+  </header>
 
-    <!-- タブ -->
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('converter', this)">🎙️ Text Converter</button>
-      <button class="tab-btn" onclick="switchTab('slides', this)">🍌 スライド生成</button>
-      <button class="tab-btn" onclick="switchTab('sales', this)">📨 Sales AI</button>
-      <button class="tab-btn" onclick="switchTab('tracker', this)">🌐 IP トラッカー</button>
-      <button class="tab-btn" onclick="switchTab('ga4', this)">📊 GA4</button>
-      <button class="tab-btn" onclick="switchTab('forest', this)">🌿 Forest Church</button>
-      <button class="tab-btn" onclick="switchTab('animatch', this)">🐾 AniMatch</button>
-    </div>
+  <main class="main">
 
-    <!-- ========== TAB: Text Converter ========== -->
-    <div id="tab-converter" class="tab-panel active">
+    <!-- 公開サービス -->
+    <section class="section">
+      <div class="section-label">公開サービス</div>
+      <div class="grid grid-3">
 
-      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:flex-end;gap:10px;">
-        <div class="filter-group">
-          <button class="filter-btn active" onclick="setFilter('all', this)">全体</button>
-          <button class="filter-btn" onclick="setFilter('lastMonth', this)">先月</button>
-          <button class="filter-btn" onclick="setFilter('thisMonth', this)">今月</button>
-        </div>
-        <button class="refresh-btn" onclick="loadStats()">🔄 更新</button>
-      </div>
-
-      <div id="tc-loading" class="loading">データを読み込んでいます...</div>
-
-      <div id="tc-dashboard" style="display: none;">
-
-        <!-- Source Cards -->
-        <div class="source-grid">
-          <div class="source-card plaud">
-            <div class="source-header">
-              <div class="source-icon">🎙️</div>
-              <div>
-                <div class="source-title">PlaudAI 音声録音</div>
-                <div class="source-desc">音声 → 文字起こし → 議事録</div>
-              </div>
-            </div>
-            <div class="source-count" id="plaudCount">-</div>
-            <div class="source-sub" id="plaudSub">-</div>
+        <a href="https://www.blinx.jp" target="_blank" class="card">
+          <div class="card-icon icon-purple">🏢</div>
+          <div class="card-body">
+            <div class="card-title">Blinx コーポレート</div>
+            <div class="card-desc">会社公式サイト</div>
+            <div class="card-url">blinx.jp</div>
           </div>
+          <span class="badge badge-public">Public</span>
+        </a>
 
-          <div class="source-card lark">
-            <div class="source-header">
-              <div class="source-icon">📹</div>
-              <div>
-                <div class="source-title">Lark 録画</div>
-                <div class="source-desc">テキスト → 議事録</div>
-              </div>
-            </div>
-            <div class="source-count" id="larkCount">-</div>
-            <div class="source-sub" id="larkSub">-</div>
+        <a href="https://masalict-blinx.github.io/animatch/" target="_blank" class="card">
+          <div class="card-icon icon-pink">🐾</div>
+          <div class="card-body">
+            <div class="card-title">Animatch</div>
+            <div class="card-desc">JECCA 動物タイプ診断</div>
+            <div class="card-url">masalict-blinx.github.io/animatch</div>
           </div>
+          <span class="badge badge-public">Public</span>
+        </a>
 
-          <div class="source-card total">
-            <div class="source-header">
-              <div class="source-icon">📊</div>
-              <div>
-                <div class="source-title">合計</div>
-                <div class="source-desc">全ソース合算 <span class="period-label" id="periodLabel">全期間</span></div>
-              </div>
-            </div>
-            <div class="source-count" id="totalProcessed">-</div>
-            <div class="source-sub" id="totalSub">-</div>
+        <a href="https://masalict-blinx.github.io/ReferenceLink/" target="_blank" class="card">
+          <div class="card-icon icon-cyan">🔗</div>
+          <div class="card-body">
+            <div class="card-title">ReferenceLink</div>
+            <div class="card-desc">LINE・FB・TikTok・Instagram 流入元分析</div>
+            <div class="card-url">masalict-blinx.github.io/ReferenceLink</div>
           </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">総トークン数</div>
-            <div class="stat-value" id="totalTokens">-</div>
-            <div class="stat-subvalue" id="tokenBreakdown">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">推定コスト</div>
-            <div class="stat-value" id="totalCost">-</div>
-            <div class="stat-subvalue" id="costPerFile">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">平均処理時間</div>
-            <div class="stat-value" id="avgDuration">-</div>
-            <div class="stat-subvalue" id="successRate">-</div>
-          </div>
-        </div>
-
-        <!-- 全体のみ: 月別グラフ -->
-        <div id="monthlyCharts" style="display:none;">
-          <div class="charts-grid">
-            <div class="chart-card">
-              <div class="chart-title">📅 月別処理数推移</div>
-              <canvas id="monthlyCountChart"></canvas>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">🪙 月別トークン使用量</div>
-              <canvas id="monthlyTokensChart"></canvas>
-            </div>
-          </div>
-          <div class="charts-grid">
-            <div class="chart-card">
-              <div class="chart-title">💴 月別コスト推移</div>
-              <canvas id="monthlyCostChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">📈 日別処理数推移</div>
-            <canvas id="dailyChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">🗂️ ソース別内訳</div>
-            <canvas id="sourceChart"></canvas>
-          </div>
-        </div>
-
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">📊 日別トークン使用量</div>
-            <canvas id="tokensChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">💰 日別コスト推移</div>
-            <canvas id="costChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Conversion History -->
-        <div class="section-divider">🎙️ 音声・テキスト変換</div>
-        <div class="table-card">
-          <div class="chart-title">📄 処理履歴（最新30件）</div>
-          <table>
-            <thead>
-              <tr><th>日時</th><th>ファイル名</th><th>ソース</th><th>AIプロバイダー</th><th>トークン数</th><th>コスト</th><th>処理時間</th><th>状態</th></tr>
-            </thead>
-            <tbody id="recentFiles"></tbody>
-          </table>
-        </div>
-      </div>
-    </div><!-- /tab-converter -->
-
-    <!-- ========== TAB: スライド生成 ========== -->
-    <div id="tab-slides" class="tab-panel">
-
-      <div id="slides-loading" class="loading">データを読み込んでいます...</div>
-
-      <div id="slides-dashboard" style="display:none;">
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">スライド生成数（成功）</div>
-            <div class="stat-value" id="slideTotal">-</div>
-            <div class="stat-subvalue" id="slideSub">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">平均スライド枚数</div>
-            <div class="stat-value" id="slideAvgCount">-</div>
-            <div class="stat-subvalue">枚/回</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">平均処理時間</div>
-            <div class="stat-value" id="slideAvgDuration">-</div>
-            <div class="stat-subvalue">秒/回</div>
-          </div>
-        </div>
-
-        <!-- 月別グラフ -->
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">📅 月別スライド生成数</div>
-            <canvas id="slideMonthlyChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">⏱️ 月別平均処理時間</div>
-            <canvas id="slideDurChart"></canvas>
-          </div>
-        </div>
-
-        <div class="table-card">
-          <div class="chart-title">🍌 スライド生成履歴（最新20件）</div>
-          <table>
-            <thead>
-              <tr><th>日時</th><th>タイトル</th><th>スライド数</th><th>処理時間</th><th>状態</th></tr>
-            </thead>
-            <tbody id="slideHistory"></tbody>
-          </table>
-        </div>
+          <span class="badge badge-public">Public</span>
+        </a>
 
       </div>
-    </div><!-- /tab-slides -->
+    </section>
 
-    <!-- ========== TAB: Sales AI ========== -->
-    <div id="tab-sales" class="tab-panel">
+    <!-- 社内ツール -->
+    <section class="section">
+      <div class="section-label">社内ツール</div>
+      <div class="grid grid-3">
 
-      <!-- オフライン時 -->
-      <div id="sales-offline" class="sales-offline-notice" style="display:none;">
-        <h3>⚠️ Sales AI サーバーに接続できません</h3>
-        <p style="margin-top:8px;">ローカルサーバーが起動しているか確認してください。</p>
-        <p style="margin-top:8px;"><code>python dashboard.py</code> を実行して <code>localhost:8899</code> を起動してください。</p>
-        <button class="refresh-btn" style="margin-top:16px;" onclick="salesLoad()">🔄 再接続</button>
-      </div>
-
-      <!-- データ表示 -->
-      <div id="sales-content">
-
-        <!-- ステータスバー -->
-        <div class="sales-status-bar">
-          <span class="status-dot" id="sales-dot"></span>
-          <span id="sales-status-text">確認中...</span>
-          <span style="margin-left:auto;font-size:11px;" id="sales-refresh-note"></span>
-        </div>
-
-        <!-- 5枚のカード -->
-        <div class="sales-stats-grid">
-          <div class="sales-stat-card">
-            <div class="sales-stat-label">返信待ち（メール）</div>
-            <div class="sales-stat-value" style="color:#1565c0" id="s-pending-mail">-</div>
-            <div class="sales-stat-sub">*_mail_*</div>
+        <a href="https://blinx-showcase.vercel.app" target="_blank" class="card">
+          <div class="card-icon icon-purple">✨</div>
+          <div class="card-body">
+            <div class="card-title">Blinx Showcase</div>
+            <div class="card-desc">Remotion スライドショー・機能紹介</div>
+            <div class="card-url">blinx-showcase.vercel.app</div>
           </div>
-          <div class="sales-stat-card">
-            <div class="sales-stat-label">返信待ち（Slack）</div>
-            <div class="sales-stat-value" style="color:#5e35b1" id="s-pending-slack">-</div>
-            <div class="sales-stat-sub">*_slack_*</div>
-          </div>
-          <div class="sales-stat-card">
-            <div class="sales-stat-label">返信待ち（FB）</div>
-            <div class="sales-stat-value" style="color:#1877f2" id="s-pending-fb">-</div>
-            <div class="sales-stat-sub">*_fb_*</div>
-          </div>
-          <div class="sales-stat-card">
-            <div class="sales-stat-label">送信済み</div>
-            <div class="sales-stat-value" style="color:#388e3c" id="s-sent">-</div>
-            <div class="sales-stat-sub">sent/</div>
-          </div>
-          <div class="sales-stat-card">
-            <div class="sales-stat-label">却下・無視</div>
-            <div class="sales-stat-value" style="color:#666" id="s-dismissed">-</div>
-            <div class="sales-stat-sub">dismissed/</div>
-          </div>
-        </div>
+          <span class="badge badge-private">Members</span>
+        </a>
 
-        <!-- 週次グラフ -->
-        <div class="chart-card" style="margin-bottom:20px;">
-          <div class="chart-title">📅 直近1週間の処理件数</div>
-          <canvas id="salesWeeklyChart" height="80"></canvas>
-        </div>
-
-        <!-- 返信待ち・送信済みテーブル -->
-        <div class="two-col">
-          <div class="table-card">
-            <div class="chart-title" style="margin-bottom:12px;">📬 返信待ち（直近）</div>
-            <table>
-              <thead><tr><th>種別</th><th>ファイル</th><th>日時</th></tr></thead>
-              <tbody id="s-tbl-pending"><tr><td colspan="3" style="color:#ccc;padding:12px 0">読み込み中...</td></tr></tbody>
-            </table>
+        <a href="https://dashboard-live-commercebyzeami.vercel.app" target="_blank" class="card">
+          <div class="card-icon icon-orange">📊</div>
+          <div class="card-body">
+            <div class="card-title">Live Commerce Dashboard</div>
+            <div class="card-desc">ライブコマース分析ダッシュボード</div>
+            <div class="card-url">dashboard-live-commercebyzeami.vercel.app</div>
           </div>
-          <div class="table-card">
-            <div class="chart-title" style="margin-bottom:12px;">✅ 送信済み（直近）</div>
-            <table>
-              <thead><tr><th>ファイル</th><th>日時</th></tr></thead>
-              <tbody id="s-tbl-sent"><tr><td colspan="2" style="color:#ccc;padding:12px 0">読み込み中...</td></tr></tbody>
-            </table>
+          <span class="badge badge-private">Members</span>
+        </a>
+
+        <a href="https://github.com/masalict-blinx/link-pro" target="_blank" class="card">
+          <div class="card-icon icon-blue">🔗</div>
+          <div class="card-body">
+            <div class="card-title">Link Pro</div>
+            <div class="card-desc">SNS リンクまとめ SaaS（開発中）</div>
+            <div class="card-url">GitHub / link-pro</div>
           </div>
-        </div>
-
-        <!-- ライブログ -->
-        <div class="chart-card">
-          <div class="chart-title" style="margin-bottom:12px;">🖥️ ライブログ（直近80行）</div>
-          <div class="log-panel" id="s-log">読み込み中...</div>
-        </div>
-
-      </div><!-- /sales-content -->
-    </div><!-- /tab-sales -->
-
-    <!-- ========== TAB: IP トラッカー ========== -->
-    <div id="tab-tracker" class="tab-panel">
-
-      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-        <div id="tracker-site-filter" class="filter-group">
-          <button class="filter-btn active" onclick="trackerSetSite('__all__', this)">🌐 全体</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span id="tracker-last-updated" style="font-size:11px;color:#999;"></span>
-          <button class="refresh-btn" onclick="trackerLoad()">🔄 更新</button>
-        </div>
-      </div>
-
-      <div id="tracker-loading" class="loading">データを読み込んでいます...</div>
-      <div id="tracker-error" style="display:none;background:white;border-radius:12px;padding:30px;text-align:center;color:#c62828;box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>
-
-      <div id="tracker-dashboard" style="display:none;">
-
-        <!-- KPI Cards -->
-        <div class="tracker-kpi-grid">
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">総訪問数</div>
-            <div class="tracker-kpi-value" id="tr-total">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">ユニークIP</div>
-            <div class="tracker-kpi-value" id="tr-unique">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">🤖 ボット</div>
-            <div class="tracker-kpi-value" style="color:#c62828;" id="tr-bots">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">👤 人間</div>
-            <div class="tracker-kpi-value" style="color:#388e3c;" id="tr-humans">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">サイト数</div>
-            <div class="tracker-kpi-value" style="background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="tr-sites">—</div>
-          </div>
-        </div>
-
-        <!-- サイト別サマリー（全体表示時のみ） -->
-        <div id="tr-summary-section" class="table-card" style="margin-bottom:20px;">
-          <div class="chart-title" style="margin-bottom:12px;">📊 サイト別サマリー</div>
-          <table>
-            <thead>
-              <tr><th>サイト</th><th>訪問数</th><th>ユニークIP</th><th>🤖 ボット</th><th>👤 人間</th><th>最終訪問</th></tr>
-            </thead>
-            <tbody id="tr-summary-body"></tbody>
-          </table>
-        </div>
-
-        <!-- 訪問履歴 -->
-        <div class="table-card">
-          <div class="chart-title" style="margin-bottom:12px;" id="tr-table-title">📋 訪問履歴（最新50件）</div>
-          <div style="overflow-x:auto;">
-            <table>
-              <thead>
-                <tr><th>日時（JST）</th><th>サイト</th><th>IP</th><th>国</th><th>会社名</th><th>判定</th><th>流入元</th><th>ページ</th></tr>
-              </thead>
-              <tbody id="tr-visits-body"></tbody>
-            </table>
-          </div>
-        </div>
+          <span class="badge badge-private">Dev</span>
+        </a>
 
       </div>
-    </div><!-- /tab-tracker -->
+    </section>
 
-    <!-- ========== TAB: GA4 ========== -->
-    <div id="tab-ga4" class="tab-panel">
-      <div class="iframe-offline-notice">
-        <div style="font-size:48px;margin-bottom:16px;">📊</div>
-        <h3>GA4 Analytics ダッシュボード</h3>
-        <p style="margin-top:12px;color:#777;">このダッシュボードはローカルで動作します。<br>ブラウザのセキュリティ制限により、GitHub PagesからHTTPローカルサーバーへのiframe表示はできません。</p>
-        <div style="margin-top:24px;background:#f8f9fa;border-radius:8px;padding:16px;text-align:left;display:inline-block;">
-          <p style="font-size:13px;color:#555;margin-bottom:8px;">① ターミナルで起動：</p>
-          <code style="display:block;background:#1a1a2e;color:#94a3b8;padding:10px 16px;border-radius:6px;font-size:13px;">cd ~/ZEAMI/Zeami-obsidian/ga4-dashboard && npm run dev</code>
-          <p style="font-size:13px;color:#555;margin:12px 0 8px;">② 以下のボタンで開く：</p>
-        </div>
-        <div style="margin-top:16px;">
-          <a href="http://localhost:3000" target="_blank" rel="noopener">
-            <button class="refresh-btn" style="font-size:15px;padding:12px 32px;">🚀 GA4ダッシュボードを開く（localhost:3000）</button>
-          </a>
-        </div>
-      </div>
-    </div><!-- /tab-ga4 -->
+    <!-- 管理パネル -->
+    <section class="section">
+      <div class="section-label">管理パネル</div>
+      <div class="grid grid-3">
 
-    <!-- ========== TAB: Forest Church ========== -->
-    <div id="tab-forest" class="tab-panel">
-      <div class="iframe-tab-wrap">
-        <iframe src="./forest_church_dashboard_v2.html"></iframe>
-      </div>
-    </div><!-- /tab-forest -->
+        <a href="https://github.com/masalict-blinx" target="_blank" class="card">
+          <div class="card-icon icon-slate">🐙</div>
+          <div class="card-body">
+            <div class="card-title">GitHub</div>
+            <div class="card-desc">masalict-blinx organization</div>
+            <div class="card-url">github.com/masalict-blinx</div>
+          </div>
+        </a>
 
-    <!-- ========== TAB: AniMatch ========== -->
-    <div id="tab-animatch" class="tab-panel">
+        <a href="https://vercel.com/dashboard" target="_blank" class="card">
+          <div class="card-icon icon-slate">▲</div>
+          <div class="card-body">
+            <div class="card-title">Vercel</div>
+            <div class="card-desc">デプロイ・ドメイン管理</div>
+            <div class="card-url">vercel.com/dashboard</div>
+          </div>
+        </a>
 
-      <div style="background:white;border-radius:12px;padding:12px 20px;margin-bottom:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-        <div style="font-size:14px;font-weight:700;color:#555;">🐾 JEKA動物タイプ診断 ANIMATCH</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span id="am-last-updated" style="font-size:11px;color:#999;"></span>
-          <button class="refresh-btn" onclick="animatchLoad()">🔄 更新</button>
-        </div>
-      </div>
+        <a href="https://dash.cloudflare.com" target="_blank" class="card">
+          <div class="card-icon icon-orange">☁️</div>
+          <div class="card-body">
+            <div class="card-title">Cloudflare</div>
+            <div class="card-desc">DNS・トンネル管理</div>
+            <div class="card-url">dash.cloudflare.com</div>
+          </div>
+        </a>
 
-      <div id="animatch-loading" class="loading">データを読み込んでいます...</div>
+        <a href="https://supabase.com/dashboard/project/uauallnksbsuqwetydvv" target="_blank" class="card">
+          <div class="card-icon icon-green">🗄️</div>
+          <div class="card-body">
+            <div class="card-title">Supabase</div>
+            <div class="card-desc">DB・Auth・Edge Functions</div>
+            <div class="card-url">supabase.com/dashboard</div>
+          </div>
+        </a>
 
-      <div id="animatch-dashboard" style="display:none;">
+        <a href="https://console.apify.com" target="_blank" class="card">
+          <div class="card-icon icon-cyan">🕷️</div>
+          <div class="card-body">
+            <div class="card-title">Apify</div>
+            <div class="card-desc">スクレイピング・Actor 管理</div>
+            <div class="card-url">console.apify.com</div>
+          </div>
+        </a>
 
-        <!-- KPI -->
-        <div class="tracker-kpi-grid" style="grid-template-columns:repeat(4,1fr);">
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">総セッション数</div>
-            <div class="tracker-kpi-value" id="am-total">—</div>
+        <a href="https://github.com/masalict-blinx/blinx-corporate" target="_blank" class="card">
+          <div class="card-icon icon-purple">🏗️</div>
+          <div class="card-body">
+            <div class="card-title">Corporate リポジトリ</div>
+            <div class="card-desc">blinx.jp ソースコード</div>
+            <div class="card-url">github.com/masalict-blinx/blinx-corporate</div>
           </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">診断完了数</div>
-            <div class="tracker-kpi-value" style="color:#388e3c;" id="am-completed">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">完了率</div>
-            <div class="tracker-kpi-value" style="background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" id="am-rate">—</div>
-          </div>
-          <div class="tracker-kpi-card">
-            <div class="tracker-kpi-label">直近7日</div>
-            <div class="tracker-kpi-value" style="color:#f57c00;" id="am-recent7">—</div>
-          </div>
-        </div>
-
-        <!-- タイプ分布 + 軸別分布 -->
-        <div class="two-col" style="margin-bottom:20px;">
-          <div class="chart-card" style="flex:2;">
-            <div class="chart-title">🏆 タイプ別診断数（上位12）</div>
-            <canvas id="am-type-chart" height="120"></canvas>
-          </div>
-          <div class="chart-card" style="flex:1;">
-            <div class="chart-title">📅 日別診断数（直近30日）</div>
-            <canvas id="am-daily-chart" height="120"></canvas>
-          </div>
-        </div>
-
-        <!-- 軸別ドーナツ -->
-        <div class="charts-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
-          <div class="chart-card">
-            <div class="chart-title" style="font-size:12px;">J/K軸</div>
-            <canvas id="am-axis-jk"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title" style="font-size:12px;">E/C軸</div>
-            <canvas id="am-axis-ec"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title" style="font-size:12px;">A/S軸</div>
-            <canvas id="am-axis-as"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title" style="font-size:12px;">N/T軸</div>
-            <canvas id="am-axis-nt"></canvas>
-          </div>
-        </div>
-
-        <!-- 最新診断テーブル -->
-        <div class="table-card">
-          <div class="chart-title" style="margin-bottom:12px;">📋 最新の診断結果（直近20件）</div>
-          <div style="overflow-x:auto;">
-            <table>
-              <thead>
-                <tr><th>日時（JST）</th><th>アイコン</th><th>タイプコード</th><th>タイプ名</th></tr>
-              </thead>
-              <tbody id="am-sessions-body"></tbody>
-            </table>
-          </div>
-        </div>
+        </a>
 
       </div>
-    </div><!-- /tab-animatch -->
+    </section>
 
-  </div><!-- /container -->
+  </main>
 
-  <script>
-    // ========== タブ切り替え ==========
-    function switchTab(name, btn) {
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + name).classList.add('active');
-      btn.classList.add('active');
-      if (name === 'sales'   && !salesLoaded)   salesLoad();
-      if (name === 'slides'  && !slidesLoaded)  loadSlideStats();
-      if (name === 'tracker' && !trackerLoaded) trackerLoad();
-      if (name === 'animatch' && !animatchLoaded) animatchLoad();
-    }
+  <footer class="footer">
+    © 2026 Blinx Inc. — Internal Use Only
+  </footer>
 
-
-    let slidesLoaded = false;
-    let slideCharts = {};
-
-    // ========== Text Converter ==========
-    const PRICING = {
-      claude: {
-        'claude-opus-4-5-20251101': { input: 15.0, output: 75.0 },
-        'claude-sonnet-4-5-20250929': { input: 3.0, output: 15.0 },
-        'claude-haiku-3-5-20241022': { input: 0.8, output: 4.0 }
-      },
-      openai: {
-        'gpt-4o': { input: 2.5, output: 10.0 },
-        'gpt-4-turbo': { input: 10.0, output: 30.0 },
-        'gpt-3.5-turbo': { input: 0.5, output: 1.5 }
-      }
-    };
-
-    let allRecords = [];
-    let currentFilter = 'all';
-    let charts = {};
-
-    function getSourceType(record) { return record.fileType === 'audio' ? 'plaud' : 'lark'; }
-    function isClaudeCode(record)  { return record.aiProvider === 'claude-code'; }
-
-    function calculateCost(record) {
-      if (record.status !== 'success' || isClaudeCode(record)) return 0;
-      const pricing = PRICING[record.aiProvider]?.[record.model];
-      if (!pricing) return 0;
-      return (record.inputTokens / 1000000) * pricing.input + (record.outputTokens / 1000000) * pricing.output;
-    }
-
-    function formatNumber(num) { return Math.round(num).toLocaleString('ja-JP'); }
-    function formatCost(cost)  { return '$' + cost.toFixed(4); }
-    function formatTokens(record) {
-      if (isClaudeCode(record)) return '-';
-      return formatNumber((record.inputTokens || 0) + (record.outputTokens || 0));
-    }
-    function formatRecordCost(record) {
-      if (isClaudeCode(record)) return '<span title="Claude Codeサブスク内">∞</span>';
-      return formatCost(calculateCost(record));
-    }
-
-    function getFilterRange(filter) {
-      const now = new Date();
-      if (filter === 'thisMonth') {
-        return { start: new Date(now.getFullYear(), now.getMonth(), 1),
-                 end:   new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59),
-                 label: `今月 (${now.getFullYear()}/${now.getMonth() + 1})` };
-      }
-      if (filter === 'lastMonth') {
-        return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-                 end:   new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59),
-                 label: `先月 (${now.getFullYear()}/${now.getMonth()})` };
-      }
-      return { start: null, end: null, label: '全期間' };
-    }
-
-    function applyFilter(records, filter) {
-      const range = getFilterRange(filter);
-      if (!range.start) return records;
-      return records.filter(r => { const t = new Date(r.timestamp); return t >= range.start && t <= range.end; });
-    }
-
-    function setFilter(filter, btn) {
-      currentFilter = filter;
-      document.querySelectorAll('#tab-converter .filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderDashboard();
-    }
-
-    function destroyCharts() { Object.values(charts).forEach(c => c.destroy()); charts = {}; }
-
-    function renderDashboard() {
-      const filtered      = applyFilter(allRecords, currentFilter);
-      const range         = getFilterRange(currentFilter);
-      const successRecs   = filtered.filter(r => r.status === 'success');
-      const errorCount    = filtered.filter(r => r.status === 'error').length;
-      const plaudRecs     = successRecs.filter(r => getSourceType(r) === 'plaud');
-      const larkRecs      = successRecs.filter(r => getSourceType(r) === 'lark');
-      const apiRecs       = successRecs.filter(r => !isClaudeCode(r));
-      const totalIn       = apiRecs.reduce((s, r) => s + (r.inputTokens || 0), 0);
-      const totalOut      = apiRecs.reduce((s, r) => s + (r.outputTokens || 0), 0);
-      const totalCost     = apiRecs.reduce((s, r) => s + calculateCost(r), 0);
-      const totalDur      = successRecs.reduce((s, r) => s + (r.totalDuration || 0), 0);
-
-      document.getElementById('periodLabel').textContent  = range.label;
-      document.getElementById('plaudCount').textContent   = plaudRecs.length;
-      document.getElementById('plaudSub').textContent     = '音声ファイル処理';
-      document.getElementById('larkCount').textContent    = larkRecs.length;
-      document.getElementById('larkSub').textContent      = 'テキストファイル処理';
-      document.getElementById('totalProcessed').textContent = successRecs.length;
-      document.getElementById('totalSub').textContent     = `エラー: ${errorCount}件 | 成功率: ${filtered.length ? ((successRecs.length / filtered.length) * 100).toFixed(1) : 0}%`;
-      document.getElementById('totalTokens').textContent  = formatNumber(totalIn + totalOut);
-      document.getElementById('tokenBreakdown').textContent = `入力: ${formatNumber(totalIn)} | 出力: ${formatNumber(totalOut)}`;
-      document.getElementById('totalCost').textContent    = formatCost(totalCost);
-      document.getElementById('costPerFile').textContent  = `平均: ${formatCost(successRecs.length ? totalCost / successRecs.length : 0)}/ファイル`;
-      document.getElementById('avgDuration').textContent  = ((successRecs.length ? totalDur / successRecs.length : 0) / 1000).toFixed(1) + 's';
-      document.getElementById('successRate').textContent  = `成功: ${successRecs.length}件 | エラー: ${errorCount}件`;
-
-      document.getElementById('monthlyCharts').style.display = currentFilter === 'all' ? 'block' : 'none';
-
-      destroyCharts();
-      renderCharts(successRecs);
-      if (currentFilter === 'all') renderMonthlyCharts(successRecs);
-      renderRecentFiles(filtered);
-
-      document.getElementById('tc-loading').style.display    = 'none';
-      document.getElementById('tc-dashboard').style.display  = 'block';
-    }
-
-    function renderCharts(successRecs) {
-      const dailyMap = {};
-      successRecs.forEach(r => {
-        const date = new Date(r.timestamp).toISOString().split('T')[0];
-        if (!dailyMap[date]) dailyMap[date] = { plaud: 0, lark: 0, cost: 0, tokens: 0 };
-        dailyMap[date][getSourceType(r)]++;
-        dailyMap[date].cost   += calculateCost(r);
-        dailyMap[date].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
-      });
-
-      const dailyData = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
-      const labels = dailyData.map(d => d[0].substring(5));
-
-      charts.daily = new Chart(document.getElementById('dailyChart'), {
-        type: 'bar',
-        data: { labels, datasets: [
-          { label: 'PlaudAI音声', data: dailyData.map(d => d[1].plaud), backgroundColor: 'rgba(25,118,210,0.7)', stack: 'source' },
-          { label: 'Lark議事録', data: dailyData.map(d => d[1].lark),  backgroundColor: 'rgba(123,31,162,0.7)',  stack: 'source' }
-        ]},
-        options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
-      });
-
-      charts.source = new Chart(document.getElementById('sourceChart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['PlaudAI 音声録音', 'Lark 録画'],
-          datasets: [{ data: [successRecs.filter(r => getSourceType(r) === 'plaud').length, successRecs.filter(r => getSourceType(r) === 'lark').length],
-                       backgroundColor: ['rgba(25,118,210,0.7)', 'rgba(123,31,162,0.7)'] }]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-      });
-
-      charts.tokens = new Chart(document.getElementById('tokensChart'), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'トークン数', data: dailyData.map(d => d[1].tokens), borderColor: 'rgba(102,126,234,1)', backgroundColor: 'rgba(102,126,234,0.1)', fill: true, tension: 0.3 }] },
-        options: { responsive: true }
-      });
-
-      charts.cost = new Chart(document.getElementById('costChart'), {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'コスト ($)', data: dailyData.map(d => d[1].cost), borderColor: 'rgba(118,75,162,1)', backgroundColor: 'rgba(118,75,162,0.1)', fill: true, tension: 0.3 }] },
-        options: { responsive: true }
-      });
-    }
-
-    function renderMonthlyCharts(successRecs) {
-      const monthlyMap = {};
-      successRecs.forEach(r => {
-        const month = new Date(r.timestamp).toISOString().substring(0, 7);
-        if (!monthlyMap[month]) monthlyMap[month] = { plaud: 0, lark: 0, tokens: 0, cost: 0 };
-        monthlyMap[month][getSourceType(r)]++;
-        monthlyMap[month].tokens += (r.inputTokens || 0) + (r.outputTokens || 0);
-        monthlyMap[month].cost   += calculateCost(r);
-      });
-      const md = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0]));
-      const labels = md.map(d => d[0]);
-
-      charts.monthlyCount = new Chart(document.getElementById('monthlyCountChart'), {
-        type: 'bar',
-        data: { labels, datasets: [
-          { label: 'PlaudAI音声', data: md.map(d => d[1].plaud), backgroundColor: 'rgba(25,118,210,0.7)', stack: 'source' },
-          { label: 'Lark議事録', data: md.map(d => d[1].lark),  backgroundColor: 'rgba(123,31,162,0.7)',  stack: 'source' }
-        ]},
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true, ticks: { stepSize: 1 } } } }
-      });
-
-      charts.monthlyTokens = new Chart(document.getElementById('monthlyTokensChart'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'トークン数', data: md.map(d => d[1].tokens), backgroundColor: 'rgba(102,126,234,0.7)' }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-      });
-
-      charts.monthlyCost = new Chart(document.getElementById('monthlyCostChart'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'コスト ($)', data: md.map(d => d[1].cost || 0), backgroundColor: 'rgba(118,75,162,0.7)' }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: v => '$' + v.toFixed(4) } } } }
-      });
-    }
-
-    function renderRecentFiles(records) {
-      const recent = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
-      const tbody  = document.getElementById('recentFiles');
-      tbody.innerHTML = '';
-      recent.forEach(record => {
-        const src  = getSourceType(record);
-        const name = record.outputFileName || record.fileName;
-        tbody.insertRow().innerHTML = `
-          <td>${new Date(record.timestamp).toLocaleString('ja-JP')}</td>
-          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
-          <td><span class="badge badge-${src}">${src === 'plaud' ? '🎙️ PlaudAI' : '📹 Lark'}</span></td>
-          <td><span class="badge badge-claude">${(record.aiProvider || '-').toUpperCase()}</span></td>
-          <td>${formatTokens(record)}</td>
-          <td>${formatRecordCost(record)}</td>
-          <td>${((record.totalDuration || 0) / 1000).toFixed(1)}s</td>
-          <td><span class="badge badge-${record.status}">${record.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>`;
-      });
-    }
-
-    const SUPABASE_URL      = 'https://uauallnksbsuqwetydvv.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhdWFsbG5rc2JzdXF3ZXR5ZHZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMjg1OTEsImV4cCI6MjA3NjkwNDU5MX0.HCWvoth7Baa0n2HtUh1yDBRBxLn_jQGsE7RqpsMHqZ8';
-    const supabaseClient    = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loadStats() {
-      try {
-        const { data } = await supabaseClient.from('conversion_logs').select('*').order('timestamp', { ascending: false });
-        allRecords = (data || []).map(r => ({
-          id: r.id, timestamp: r.timestamp, fileName: r.file_name, outputFileName: r.output_file_name,
-          fileType: r.file_type, status: r.status, totalDuration: r.total_duration,
-          aiProvider: r.ai_provider, model: r.model, inputTokens: r.input_tokens, outputTokens: r.output_tokens,
-        }));
-        renderDashboard();
-      } catch (e) {
-        document.getElementById('tc-loading').textContent = 'エラー: ' + e.message;
-      }
-    }
-
-    async function loadSlideStats() {
-      try {
-        const { data } = await supabaseClient.from('slide_logs').select('*').order('timestamp', { ascending: false });
-        const sl = data || [];
-        const ok = sl.filter(r => r.status === 'success');
-
-        document.getElementById('slideTotal').textContent       = ok.length;
-        document.getElementById('slideSub').textContent         = `エラー: ${sl.filter(r => r.status === 'error').length}件`;
-        document.getElementById('slideAvgCount').textContent    = ok.length ? (ok.reduce((s, r) => s + (r.slide_count || 0), 0) / ok.length).toFixed(1) : '-';
-        document.getElementById('slideAvgDuration').textContent = ok.length ? (ok.reduce((s, r) => s + (r.duration_sec || 0), 0) / ok.length).toFixed(0) : '-';
-
-        // 履歴テーブル
-        const tbody = document.getElementById('slideHistory');
-        tbody.innerHTML = '';
-        sl.slice(0, 20).forEach(r => {
-          tbody.insertRow().innerHTML = `
-            <td>${new Date(r.timestamp).toLocaleString('ja-JP')}</td>
-            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.title || '-'}</td>
-            <td>${r.slide_count != null ? r.slide_count + '枚' : '-'}</td>
-            <td>${r.duration_sec != null ? Math.round(r.duration_sec) + 's' : '-'}</td>
-            <td><span class="badge badge-${r.status}">${r.status === 'success' ? '✅ 成功' : '❌ エラー'}</span></td>`;
-        });
-
-        // 月別グラフ
-        const monthMap = {};
-        ok.forEach(r => {
-          const m = r.timestamp.substring(0, 7);
-          if (!monthMap[m]) monthMap[m] = { count: 0, dur: 0 };
-          monthMap[m].count++;
-          monthMap[m].dur += r.duration_sec || 0;
-        });
-        const months = Object.entries(monthMap).sort((a, b) => a[0].localeCompare(b[0]));
-        const mLabels = months.map(d => d[0]);
-
-        Object.values(slideCharts).forEach(c => c.destroy());
-        slideCharts = {};
-
-        slideCharts.monthly = new Chart(document.getElementById('slideMonthlyChart'), {
-          type: 'bar',
-          data: { labels: mLabels, datasets: [{ label: '生成数', data: months.map(d => d[1].count), backgroundColor: 'rgba(245,158,11,0.75)', borderRadius: 4 }] },
-          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
-
-        slideCharts.dur = new Chart(document.getElementById('slideDurChart'), {
-          type: 'bar',
-          data: { labels: mLabels, datasets: [{ label: '平均処理時間 (秒)', data: months.map(d => d[1].count ? (d[1].dur / d[1].count).toFixed(1) : 0), backgroundColor: 'rgba(124,58,237,0.7)', borderRadius: 4 }] },
-          options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
-        });
-
-        document.getElementById('slides-loading').style.display   = 'none';
-        document.getElementById('slides-dashboard').style.display = 'block';
-        slidesLoaded = true;
-      } catch (e) { console.error('slide stats error:', e); }
-    }
-
-    loadStats();
-    setInterval(loadStats, 30000);
-    setInterval(loadSlideStats, 30000);
-
-    // ========== Sales AI ==========
-    const SALES_API = 'http://localhost:8899';
-    let salesLoaded = false;
-    let salesWeeklyChart = null;
-    const BADGE_COLORS = { mail: '#1565c0', slack: '#5e35b1', fb: '#1877f2' };
-
-    function salesRenderStats(d) {
-      // ステータスドット
-      const dot = document.getElementById('sales-dot');
-      dot.className = 'status-dot ' + (d.running ? 'running' : 'stopped');
-      document.getElementById('sales-status-text').textContent =
-        d.running ? `稼働中 (PID: ${d.pids})` : '停止中';
-
-      document.getElementById('s-pending-mail').textContent  = d.pending_mail;
-      document.getElementById('s-pending-slack').textContent = d.pending_slack;
-      document.getElementById('s-pending-fb').textContent    = d.pending_fb;
-      document.getElementById('s-sent').textContent          = d.sent;
-      document.getElementById('s-dismissed').textContent     = d.dismissed;
-
-      // 週次グラフ
-      if (d.weekly) {
-        if (salesWeeklyChart) {
-          salesWeeklyChart.data.labels            = d.weekly.labels;
-          salesWeeklyChart.data.datasets[0].data  = d.weekly.sent;
-          salesWeeklyChart.data.datasets[1].data  = d.weekly.dismissed;
-          salesWeeklyChart.update('none');
-        } else {
-          try {
-            salesWeeklyChart = new Chart(document.getElementById('salesWeeklyChart'), {
-              type: 'bar',
-              data: {
-                labels: d.weekly.labels,
-                datasets: [
-                  { label: '送信済み', data: d.weekly.sent, backgroundColor: 'rgba(56,142,60,0.75)', borderRadius: 4, stack: 'w' },
-                  { label: '却下・無視', data: d.weekly.dismissed, backgroundColor: 'rgba(180,180,180,0.5)', borderRadius: 4, stack: 'w' }
-                ]
-              },
-              options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } },
-                scales: {
-                  x: { stacked: true },
-                  y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
-                }
-              }
-            });
-          } catch(e) { console.error('salesWeeklyChart error:', e); }
-        }
-      }
-
-      // 返信待ちテーブル
-      const tp = document.getElementById('s-tbl-pending');
-      if (!d.recent_pending || d.recent_pending.length === 0) {
-        tp.innerHTML = "<tr><td colspan='3' style='color:#ccc;padding:12px 0'>なし</td></tr>";
-      } else {
-        tp.innerHTML = d.recent_pending.map(f => {
-          const bc = BADGE_COLORS[f.type] || '#666';
-          const bg = f.type === 'mail' ? '#e3f2fd' : (f.type === 'fb' ? '#e8eaf6' : '#ede7f6');
-          return `<tr>
-            <td><span class="badge" style="background:${bg};color:${bc}">${f.type.toUpperCase()}</span></td>
-            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</td>
-            <td style="white-space:nowrap;color:#999">${f.time}</td>
-          </tr>`;
-        }).join('');
-      }
-
-      // 送信済みテーブル
-      const ts = document.getElementById('s-tbl-sent');
-      if (!d.recent_sent || d.recent_sent.length === 0) {
-        ts.innerHTML = "<tr><td colspan='2' style='color:#ccc;padding:12px 0'>なし</td></tr>";
-      } else {
-        ts.innerHTML = d.recent_sent.map(f =>
-          `<tr><td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</td><td style="white-space:nowrap;color:#999">${f.time}</td></tr>`
-        ).join('');
-      }
-
-      document.getElementById('sales-refresh-note').textContent =
-        `10秒ごとに更新（最終: ${new Date().toLocaleTimeString('ja-JP')})`;
-      salesLoaded = true;
-    }
-
-    function salesRenderLog(lines) {
-      const colorMap = [
-        ['[ERROR]','log-error'],['[AI]','log-ai'],['[OBSIDIAN]','log-obsidian'],
-        ['[SLACK]','log-slack'],['[MAIL]','log-mail'],['[WATCHER]','log-mail'],['[SEND]','log-send']
-      ];
-      const logEl = document.getElementById('s-log');
-      const wasAtBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40;
-      logEl.innerHTML = lines.map(l => {
-        const esc = l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const cls = (colorMap.find(([k]) => esc.includes(k)) || [, ''])[1];
-        return cls ? `<span class="${cls}">${esc}</span>` : esc;
-      }).join('\n');
-      if (wasAtBottom) logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    async function salesLoad() {
-      document.getElementById('sales-offline').style.display  = 'none';
-      document.getElementById('sales-content').style.display  = 'block';
-      try {
-        const [statsRes, logRes] = await Promise.all([
-          fetch(SALES_API + '/api/stats', { signal: AbortSignal.timeout(5000) }),
-          fetch(SALES_API + '/api/log',   { signal: AbortSignal.timeout(5000) })
-        ]);
-        salesRenderStats(await statsRes.json());
-        salesRenderLog((await logRes.json()).lines);
-      } catch(e) {
-        document.getElementById('sales-offline').style.display  = 'block';
-        document.getElementById('sales-content').style.display  = 'none';
-        console.warn('Sales AI unreachable:', e.message);
-      }
-    }
-
-    setInterval(() => {
-      if (document.getElementById('tab-sales').classList.contains('active')) salesLoad();
-    }, 10000);
-
-    // ========== IP トラッカー ==========
-    const TR_URL = 'https://lfdmnfnrfwljdeoubfvx.supabase.co';
-    const TR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmZG1uZm5yZndsamRlb3ViZnZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODc1MjMsImV4cCI6MjA4NzM2MzUyM30.3X5JQ4UOmjJV3cx5_CBMPicV8yCe_O0pIrhqFquya90';
-    const TR_SITE_NAMES = { 'blinx-lp': 'Blinx株式会社 LP', 'jekca-animatch': 'JEKCA Animatch' };
-
-    let trackerLoaded = false;
-    let trackerAllData = [];
-    let trackerCurrentSite = '__all__';
-
-    function trSiteName(id) { return TR_SITE_NAMES[id] || id; }
-
-    function trFormatJST(utcStr) {
-      if (!utcStr) return '—';
-      return new Date(utcStr).toLocaleString('ja-JP', {
-        timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-      });
-    }
-
-    function trIsBot(r) {
-      if (r.company_type === 'hosting') return true;
-      if ([15169, 32934, 8075, 20940, 14618].includes(Number(r.asn))) return true;
-      if (/bot|crawler|spider/i.test(r.ua || '')) return true;
-      if ((r.ua || '').includes('Nexus 5X Build/MMB29P')) return true;
-      return false;
-    }
-
-    function trBotBadge(r) {
-      return trIsBot(r)
-        ? '<span class="badge badge-bot">🤖 ボット</span>'
-        : '<span class="badge badge-human">👤 人間</span>';
-    }
-
-    function trCompanyTypeBadge(type) {
-      if (!type) return '<span style="color:#ccc">—</span>';
-      const cls = { hosting: 'badge-hosting', isp: 'badge-isp', business: 'badge-business' }[type] || '';
-      return `<span class="badge ${cls}">${type}</span>`;
-    }
-
-    function trTruncate(str, n = 40) {
-      if (!str) return '—';
-      return str.length > n ? str.slice(0, n) + '…' : str;
-    }
-
-    function trackerSetSite(siteId, btn) {
-      trackerCurrentSite = siteId;
-      document.querySelectorAll('#tracker-site-filter .filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      trackerRender(trackerAllData);
-    }
-
-    function trackerRender(data) {
-      const filtered = trackerCurrentSite === '__all__'
-        ? data
-        : data.filter(r => r.site_id === trackerCurrentSite);
-
-      const sites    = [...new Set(data.map(r => r.site_id))];
-      const uniqueIPs = new Set(filtered.map(r => r.ip)).size;
-      const bots     = filtered.filter(trIsBot).length;
-
-      document.getElementById('tr-total').textContent  = filtered.length;
-      document.getElementById('tr-unique').textContent = uniqueIPs;
-      document.getElementById('tr-bots').textContent   = bots;
-      document.getElementById('tr-humans').textContent = filtered.length - bots;
-      document.getElementById('tr-sites').textContent  = sites.length;
-
-      // サマリーテーブル（全体時のみ）
-      const summarySection = document.getElementById('tr-summary-section');
-      if (trackerCurrentSite === '__all__') {
-        summarySection.style.display = 'block';
-        document.getElementById('tr-table-title').textContent = '📋 訪問履歴（最新50件）';
-        document.getElementById('tr-summary-body').innerHTML = sites.map(sid => {
-          const rows = data.filter(r => r.site_id === sid);
-          const uIP  = new Set(rows.map(r => r.ip)).size;
-          const b    = rows.filter(trIsBot).length;
-          return `<tr style="cursor:pointer;" onclick="document.querySelector('[onclick*=\\'trackerSetSite(\\\\\"${sid}\\\\\"\\']]').click()">
-            <td style="color:#667eea;font-weight:600;">${trSiteName(sid)}</td>
-            <td>${rows.length}</td><td>${uIP}</td>
-            <td style="color:#c62828;">${b}</td>
-            <td style="color:#388e3c;">${rows.length - b}</td>
-            <td style="color:#999;font-size:12px;">${trFormatJST(rows[0]?.at)}</td>
-          </tr>`;
-        }).join('');
-      } else {
-        summarySection.style.display = 'none';
-        document.getElementById('tr-table-title').textContent = `📋 ${trSiteName(trackerCurrentSite)} — 訪問履歴（${filtered.length}件）`;
-      }
-
-      // 訪問履歴テーブル
-      document.getElementById('tr-visits-body').innerHTML = filtered.slice(0, 50).map(r => `
-        <tr>
-          <td style="white-space:nowrap;font-size:12px;">${trFormatJST(r.at)}</td>
-          <td style="font-size:12px;font-weight:600;">${trSiteName(r.site_id)}</td>
-          <td style="font-family:monospace;font-size:12px;">${r.ip}</td>
-          <td>${r.country || '—'}</td>
-          <td style="font-size:12px;">${r.company_name || r.org || '—'}</td>
-          <td>${trBotBadge(r)}</td>
-          <td style="font-size:11px;color:#999;">${trTruncate(r.referrer, 28)}</td>
-          <td style="font-size:11px;color:#999;">${trTruncate(r.page_url, 35)}</td>
-        </tr>`).join('');
-    }
-
-    async function trackerLoad() {
-      document.getElementById('tracker-loading').style.display   = 'block';
-      document.getElementById('tracker-dashboard').style.display = 'none';
-      document.getElementById('tracker-error').style.display     = 'none';
-
-      try {
-        const res = await fetch(`${TR_URL}/rest/v1/visits?select=*&order=at.desc`, {
-          headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
-        });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        trackerAllData = await res.json();
-      } catch (e) {
-        document.getElementById('tracker-loading').style.display = 'none';
-        const errEl = document.getElementById('tracker-error');
-        errEl.textContent = 'エラー: ' + e.message;
-        errEl.style.display = 'block';
-        return;
-      }
-
-      // サイトフィルターボタンを動的追加
-      const sites = [...new Set(trackerAllData.map(r => r.site_id))];
-      const filterEl = document.getElementById('tracker-site-filter');
-      filterEl.querySelectorAll('[data-site]').forEach(el => el.remove());
-      sites.forEach(sid => {
-        if (!filterEl.querySelector(`[data-site="${sid}"]`)) {
-          const btn = document.createElement('button');
-          btn.className = 'filter-btn';
-          btn.textContent = trSiteName(sid);
-          btn.setAttribute('data-site', sid);
-          btn.setAttribute('onclick', `trackerSetSite('${sid}', this)`);
-          btn.onclick = function() { trackerSetSite(sid, this); };
-          filterEl.appendChild(btn);
-        }
-      });
-
-      trackerRender(trackerAllData);
-      document.getElementById('tracker-loading').style.display   = 'none';
-      document.getElementById('tracker-dashboard').style.display = 'block';
-      document.getElementById('tracker-last-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
-      trackerLoaded = true;
-    }
-
-    setInterval(() => {
-      if (document.getElementById('tab-tracker').classList.contains('active')) trackerLoad();
-    }, 60000);
-
-    // ========== AniMatch ==========
-    let animatchLoaded = false;
-
-    async function animatchLoad() {
-      const loadingEl  = document.getElementById('animatch-loading');
-      const dashEl     = document.getElementById('animatch-dashboard');
-      loadingEl.style.display = 'block';
-      dashEl.style.display    = 'none';
-      try {
-        const [sessRes, ansRes] = await Promise.all([
-          fetch(`${TR_URL}/rest/v1/animatch_sessions?select=*&order=started_at.desc&limit=2000`, {
-            headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
-          }),
-          fetch(`${TR_URL}/rest/v1/animatch_answers?select=choice&limit=10000`, {
-            headers: { 'apikey': TR_KEY, 'Authorization': 'Bearer ' + TR_KEY }
-          })
-        ]);
-        if (!sessRes.ok) throw new Error('sessions: HTTP ' + sessRes.status);
-        const sessions = await sessRes.json();
-        const answers  = ansRes.ok ? await ansRes.json() : [];
-        amRender(sessions, answers);
-        loadingEl.style.display = 'none';
-        dashEl.style.display    = 'block';
-        document.getElementById('am-last-updated').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
-        animatchLoaded = true;
-      } catch(e) {
-        loadingEl.textContent = 'エラー: ' + e.message;
-      }
-    }
-
-    function amRender(sessions, answers) {
-      // KPI
-      const total     = sessions.length;
-      const completed = sessions.filter(s => s.completed).length;
-      const rate      = total ? ((completed / total) * 100).toFixed(1) : 0;
-      const cutoff7   = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recent7   = sessions.filter(s => new Date(s.started_at) >= cutoff7).length;
-      document.getElementById('am-total').textContent     = total;
-      document.getElementById('am-completed').textContent = completed;
-      document.getElementById('am-rate').textContent      = rate + '%';
-      document.getElementById('am-recent7').textContent   = recent7;
-
-      // タイプ分布棒グラフ
-      const typeCounts = {};
-      sessions.filter(s => s.completed && s.result_type).forEach(s => {
-        const key = (s.result_icon ? s.result_icon + ' ' : '') + s.result_type;
-        typeCounts[key] = (typeCounts[key] || 0) + 1;
-      });
-      const sortedTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
-      if (window.amTypeChart) window.amTypeChart.destroy();
-      window.amTypeChart = new Chart(document.getElementById('am-type-chart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: sortedTypes.map(([k]) => k),
-          datasets: [{
-            data: sortedTypes.map(([, v]) => v),
-            backgroundColor: 'rgba(102,126,234,0.75)',
-            borderColor: 'rgba(102,126,234,1)',
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-      });
-
-      // 日別診断数（直近30日）
-      const days = {};
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        days[d.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })] = 0;
-      }
-      sessions.forEach(s => {
-        const label = new Date(s.started_at).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
-        if (label in days) days[label]++;
-      });
-      if (window.amDailyChart) window.amDailyChart.destroy();
-      window.amDailyChart = new Chart(document.getElementById('am-daily-chart').getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: Object.keys(days),
-          datasets: [{
-            data: Object.values(days),
-            borderColor: 'rgba(118,75,162,0.9)',
-            backgroundColor: 'rgba(118,75,162,0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true,
-            pointRadius: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-      });
-
-      // 軸別ドーナツ
-      const axesDef = [
-        { id: 'am-axis-jk', a: 'J', b: 'K', aLabel: 'J（ペットオーナー）', bLabel: 'K（動物好き）',    colors: ['rgba(102,126,234,0.8)', 'rgba(118,75,162,0.8)'] },
-        { id: 'am-axis-ec', a: 'E', b: 'C', aLabel: 'E（擬人化型）',       bLabel: 'C（本物志向型）', colors: ['rgba(255,159,64,0.8)',  'rgba(255,99,132,0.8)'] },
-        { id: 'am-axis-as', a: 'A', b: 'S', aLabel: 'A（飾る派）',         bLabel: 'S（発信派）',     colors: ['rgba(75,192,192,0.8)',  'rgba(54,162,235,0.8)'] },
-        { id: 'am-axis-nt', a: 'N', b: 'T', aLabel: 'N（共感型）',         bLabel: 'T（発見型）',     colors: ['rgba(255,206,86,0.8)', 'rgba(153,102,255,0.8)'] }
-      ];
-      axesDef.forEach(ax => {
-        const aCount = answers.filter(a => a.choice === ax.a).length;
-        const bCount = answers.filter(a => a.choice === ax.b).length;
-        const key = 'amAxis_' + ax.id;
-        if (window[key]) window[key].destroy();
-        window[key] = new Chart(document.getElementById(ax.id).getContext('2d'), {
-          type: 'doughnut',
-          data: {
-            labels: [ax.aLabel, ax.bLabel],
-            datasets: [{ data: [aCount, bCount], backgroundColor: ax.colors, borderWidth: 2 }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } }
-            }
-          }
-        });
-      });
-
-      // 最新診断テーブル
-      const tbody = document.getElementById('am-sessions-body');
-      const recent = sessions.filter(s => s.completed && s.result_type).slice(0, 20);
-      if (recent.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4' style='color:#ccc;padding:16px 0;text-align:center;'>データなし</td></tr>";
-      } else {
-        tbody.innerHTML = recent.map(s => `
-          <tr>
-            <td style="white-space:nowrap;font-size:12px;">${trFormatJST(s.completed_at || s.created_at)}</td>
-            <td style="font-size:20px;text-align:center;">${s.result_icon || '—'}</td>
-            <td style="font-weight:700;font-family:monospace;">${s.result_type || '—'}</td>
-            <td style="font-size:13px;">${s.result_name || '—'}</td>
-          </tr>`).join('');
-      }
-    }
-
-    setInterval(() => {
-      if (document.getElementById('tab-animatch').classList.contains('active')) animatchLoad();
-    }, 60000);
-  </script>
 </body>
 </html>
-
